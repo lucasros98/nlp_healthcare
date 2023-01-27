@@ -17,8 +17,16 @@ The data used for training and testing the models is not included in this reposi
 
 ### Using notebooks with cencored data
 
-If you want to use the notebooks with censored data, you can use the following command:
+Since we are using notebooks with censored data, you can use the following command:
 
 ```bash
     pip install pre-commit
 ```
+
+Then you need to write the following command in the terminal:
+
+```bash
+    pre-commit install
+```
+
+This will install the pre-commit hook that will automatically remove all outputs and prints from the notebooks.
