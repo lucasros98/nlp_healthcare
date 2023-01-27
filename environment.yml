@@ -1,0 +1,22 @@
+name: nlp_healthcare
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - pip
+  - jupyter
+  - jupytext
+  # data
+  - pandas
+  - numpy
+  # ML
+  - scikit-learn
+  - torch
+  - tensorflow
+  - scipy
+  - nltk
+  - spacy
+  # graphics
+  - matplotlib
+  - plotly
+  - seaborn
