@@ -10,6 +10,7 @@ dependencies:
   # data
   - pandas
   - numpy
+  - collections
   # ML
   - scikit-learn
   - torch
@@ -21,3 +22,4 @@ dependencies:
   - matplotlib
   - plotly
   - seaborn
+  - tabulate
