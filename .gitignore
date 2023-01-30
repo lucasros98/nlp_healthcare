@@ -1,4 +1,7 @@
 /data
 /models
-.txt
-.csv
+*.txt
+*.csv
+*/.ipynb_checkpoints
+/figures
+.env
