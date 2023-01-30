@@ -6,6 +6,7 @@ dependencies:
   - pip
   - jupyter
   - jupytext
+  - python-dotenv
   # data
   - pandas
   - numpy
