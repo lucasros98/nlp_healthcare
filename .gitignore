@@ -5,3 +5,4 @@
 */.ipynb_checkpoints
 /figures
 .env
+*/__pycache__
