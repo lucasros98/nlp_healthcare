@@ -1,9 +1,9 @@
-# Week 1: Introduction
+# Week 1 - Setting up the project
 
 The first week of the project consisted out of the following tasks:
- - Completing the introduction to Alvis and computer clusters
+ - Completed the introduction to Alvis and computer clusters (on Canvas)
  - Preprocessing of the data
- - Exploration of the data
+ - Exploration of the dataset
  - Setting up the project structure, repository and master thesis document in Overleaf
 
 ## Exploration of the data
@@ -39,4 +39,12 @@ The reason for this is because the data has many IOB-tags. For example for the e
 
 However, other entities has just a very few IOB-tags.
 
-There are also some punctuations that we believe could be important for the models, such as "->" or "-" between dates. We will have to look into this more. 
+There are also some punctuations that we believe could be important for the models, such as "->" or "-" between dates. We will have to look into this more, but right now we added the option to keep these punctuations.
+
+
+## Other notes
+
+- We had the first writing seminar this week.
+- Created an outline for the master thesis document in Overleaf.
+- Created a project structure in the repository.
+- Sent an email to Thomas about the formatting of data, (sometimes there are a number in the end of the sentence, and it is not clear what it means).
