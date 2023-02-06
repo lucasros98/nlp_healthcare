@@ -52,11 +52,21 @@ I detta exemplet så känns det som "-" kan vara viktigt för att förstå vad s
 One example of a sentence with ->:
 
 ```
-"har" "värk" "i" "kroppen" "->" "behöver" "ta" "paracetamol"
+"Smärta" "har" "värk" "i" "kroppen" "->" "behöver" "ta" "paracetamol"
 ```
 
 Detta exempel känns som att "->" indikerar en orsak och en konsekvens. 
 
+
+Ett annat exempel är:
+
+```
+Smärta värk i kroppen
+```
+
+```
+Utskriven till						1
+```
 
 ## Other notes
 

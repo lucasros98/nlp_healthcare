@@ -10,3 +10,15 @@
   - Transformers
   - BERT
 - Continue to learn about Alvis and running jobs on the cluster
+
+From the monday meeting with supervisor:
+
+- Ta fram en lista över förekommande förkortningar.
+- När ser datan väldigt konstig ut?
+- Olika typer av katoegorier
+- Kolla om -> finns med i BERTs vocab
+
+## Completed tasks
+
+- Attented the seminar on Alvis and computer clusters
+- Created an outline for the master thesis
