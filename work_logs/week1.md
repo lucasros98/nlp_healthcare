@@ -41,6 +41,22 @@ However, other entities has just a very few IOB-tags.
 
 There are also some punctuations that we believe could be important for the models, such as "->" or "-" between dates. We will have to look into this more, but right now we added the option to keep these punctuations.
 
+One example of a sentence with - between dates:
+
+```
+"2019-01-01" "-" "2019-01-31"
+```
+
+I detta exemplet så känns det som "-" kan vara viktigt för att förstå vad som menas, och det kan indikera att detta är en period och därmed bör även "2019-01-31" vara taggad som ett "FULL_DATE".
+
+One example of a sentence with ->:
+
+```
+"har" "värk" "i" "kroppen" "->" "behöver" "ta" "paracetamol"
+```
+
+Detta exempel känns som att "->" indikerar en orsak och en konsekvens. 
+
 
 ## Other notes
 
