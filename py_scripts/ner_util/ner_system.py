@@ -2,30 +2,35 @@ import random
 from collections import defaultdict, Counter    
 import sys
 import time
+import os
 from torch.utils.data import Dataset, DataLoader
 import torch
-from vocab import Vocabulary 
+
+#Base import on the path when importing vocab.py
+#when running notebook, the path will be nlp_healthcare
+
+from dotenv import load_dotenv, find_dotenv
+sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts/ner_util')
+from vocab import Vocabulary
 
 class SequenceDataset(Dataset):
-    """A Dataset that stores a list of sentences and their corresponding labels."""
-    def __init__(self, Xwords, Y, Xchars=None, word_dropout_prob=None, word_dropout_id=None):
-        self.Xwords = Xwords
-        self.Xchars = Xchars
+    """A Dataset that stores a list of sentences (X) and their corresponding labels (Y)"""
+    def __init__(self, X, Y, word_dropout_prob=None, word_dropout_id=None):
+        self.X = X
         self.Y = Y
         self.word_dropout_prob = word_dropout_prob
         self.word_dropout_id = word_dropout_id
-        
+    
+    # return a single item in the dataset given its index.
     def __getitem__(self, idx):
         if self.word_dropout_prob:
-            words = [ w if random.random() > self.word_dropout_prob else self.word_dropout_id for w in self.Xwords[idx] ]
+            words = [ w if random.random() > self.word_dropout_prob else self.word_dropout_id for w in self.X[idx] ]
         else:
-            words = self.Xwords[idx]
+            words = self.X[idx]
         
-        if self.Xchars:
-            return words, self.Y[idx], self.Xchars[idx]
-        else:
-            return words, self.Y[idx]
-        
+        return words, self.Y[idx]
+
+    # returns the number of samples in our dataset.
     def __len__(self):
         return len(self.Y)
 
@@ -51,20 +56,12 @@ class SequenceBatcher:
 
         # Build the document tensor. We pad the shorter documents so that all documents
         # have the same length.
-        
         Xpadded = torch.as_tensor([row[0] + [pad_id]*(max_sen_len-len(row[0])) for row in XY], device=self.device)
         
         # Build the label tensor.
         Ypadded = torch.as_tensor([row[1] + [pad_id]*(max_sen_len-len(row[1])) for row in XY], device=self.device)
 
-        if len(XY[0]) == 2:
-            return Xpadded, None, Ypadded
-        else:
-            max_word_len = max(len(w) for _, _, xc in XY for w in xc)
-            Xcpadded = [xc + [[]]*(max_sen_len-len(xc)) for _, _, xc in XY]
-            Xcpadded = [[w + [pad_id]*(max_word_len-len(w)) for w in xc] for xc in Xcpadded]
-            Xcpadded = torch.as_tensor(Xcpadded, device=self.device)            
-            return Xpadded, Xcpadded, Ypadded
+        return Xpadded, Ypadded
        
 
 
@@ -220,20 +217,17 @@ class SequenceLabeler:
        
         train_word_encoded = train_tokenized.input_ids
         val_word_encoded = val_tokenized.input_ids
-        
-        train_char_encoded = None
-        val_char_encoded = None
        
         dropout_id = self.bert_tokenizer.unk_token_id
 
         # Put the training and validation data into Datasets and DataLoaders for managing minibatches.
         self.batcher = SequenceBatcher(p.device)
         
-        train_dataset = SequenceDataset(train_word_encoded, train_lbl_encoded, train_char_encoded,
+        train_dataset = SequenceDataset(train_word_encoded, train_lbl_encoded,
                                         word_dropout_prob=p.word_dropout_prob, word_dropout_id=dropout_id)
         self.train_loader = DataLoader(train_dataset, p.batch_size, shuffle=True, collate_fn=self.batcher)        
         
-        val_dataset = SequenceDataset(val_word_encoded, val_lbl_encoded, val_char_encoded)
+        val_dataset = SequenceDataset(val_word_encoded, val_lbl_encoded)
         self.val_loader = DataLoader(val_dataset, p.batch_size, shuffle=False, collate_fn=self.batcher)
 
     def fit(self, Xtrain, Ytrain, Xval, Yval):
@@ -268,22 +262,19 @@ class SequenceLabeler:
         for i in range(p.n_epochs):
 
             t0 = time.time()
-            
+
             loss_sum = 0
             self.model.train()
 
             for j, batch in enumerate(self.train_loader, 1):
 
                 # Compute the output scores.                
-                if p.use_characters:
-                    scores = self.model(batch[0], batch[1])
-                else:
-                    scores = self.model(batch[0])                
+                scores = self.model(batch[0])                
                 
                 # The scores tensor has the shape (n_sentences, n_words, n_labels).
                 # We reshape this to (n_sentences*n_words, n_labels) because the loss requires
                 # a 2-dimensional tensor. Similarly for the gold standard label tensor.                
-                loss = loss_func(scores.view(-1, len(self.label_voc)), batch[2].view(-1))
+                loss = loss_func(scores.view(-1, len(self.label_voc)), batch[1].view(-1))
                     
                 #Back propagation
                 optimizer.zero_grad()            
@@ -310,16 +301,14 @@ class SequenceLabeler:
             with torch.no_grad():
                 for j, batch in enumerate(self.val_loader, 1):
                     
-                    if p.use_characters:
-                        scores = self.model(batch[0], batch[1])
-                    else:
-                        scores = self.model(batch[0])   
+                    # Compute the output scores.
+                    scores = self.model(batch[0])   
                     
                     # Compute the highest-scoring labels at each word position.
                     predicted = scores.argmax(dim=2)
                     
                     # Update the evaluation statistics for this batch.
-                    evaluate_iob(batch[0], predicted, batch[2], self.label_voc, stats)
+                    evaluate_iob(batch[0], predicted, batch[1], self.label_voc, stats)
                     
                     if self.verbose:
                         print('.', end='')
@@ -362,23 +351,19 @@ class SequenceLabeler:
         
         word_encoded = self.bert_tokenizer(sentences, is_split_into_words=True, truncation=True, 
                                                max_length=self.params.bert_max_len).input_ids
-        char_encoded = None
             
         Ydummy = [[0]*len(x) for x in word_encoded]
                 
         dataset = SequenceDataset(word_encoded,
-                                  Ydummy,
-                                  char_encoded)
+                                  Ydummy)
         loader = DataLoader(dataset, self.params.batch_size, shuffle=False, collate_fn=self.batcher)
                 
         out = []
         self.model.eval()
         with torch.no_grad():
             for batch in loader:
-                if self.params.use_characters:
-                    scores = self.model(batch[0], batch[1])
-                else:
-                    scores = self.model(batch[0])                
+
+                scores = self.model(batch[0])                
                 predicted = scores.argmax(dim=2) 
                 
                 # Convert the integer-encoded tags to tag strings.

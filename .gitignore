@@ -7,3 +7,5 @@
 .env
 */__pycache__
 */SweDeClin-BERT
+/env
+*/ner_util/__pycache__

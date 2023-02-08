@@ -51,7 +51,8 @@ class Vocabulary:
 
         # Build the string-to-integer map by just inverting the aforementioned map.
         self.stoi = { w: i for i, w in enumerate(self.itos) }
-                
+
+       
     def encode(self, seqs):
         """Encodes a set of documents."""
         unk = self.stoi.get(UNKNOWN)

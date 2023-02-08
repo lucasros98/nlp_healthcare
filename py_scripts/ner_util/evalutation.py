@@ -1,7 +1,8 @@
 from IPython.core.display import display, HTML
+import matplotlib.pyplot as plt
+plt.style.use('seaborn')
 
 def show_entities(tagger, sentences):
-    
     tagged_sentences = tagger.predict(sentences)
     if tagger.bert_tokenizer is not None:
         word_encoded = tagger.bert_tokenizer(sentences, is_split_into_words=True, truncation=True, 
@@ -62,4 +63,9 @@ def show_entities(tagger, sentences):
     display(HTML(html))
 
 
-#Evalutation on test set - compares the predicted tags with the true tags
+def plot_training(ner_system):
+  fig, ax = plt.subplots(1, 2, figsize=(2*6,1*6))
+  ax[0].plot(ner_system.history['train_loss']);
+  ax[0].set_title('Training loss')
+  ax[1].plot(ner_system.history['val_f1']);
+  ax[1].set_title('Validation F-score')
