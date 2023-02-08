@@ -7,9 +7,8 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 
 #Base import on the path when importing vocab.py
-#when running notebook, the path will be nlp_healthcare
-
-from dotenv import load_dotenv, find_dotenv
+#The path will need to be nlp_healthcare/py_scripts/ner_util
+from dotenv import find_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts/ner_util')
 from vocab import Vocabulary
 
