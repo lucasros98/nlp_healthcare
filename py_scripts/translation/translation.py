@@ -42,7 +42,7 @@ def translate_text_to_eng(X,Y):
     new_X = []
     new_Y = []
     for i in range(len(X_translated)):
-        #remove punctuation
+        #tokenize the text
         x = X_translated[i].split(" ")
 
         curr_y = []
@@ -73,7 +73,61 @@ def translate_text_to_eng(X,Y):
 
 
 def translate_text_to_swe(X,Y):
-    return NotImplementedError()
+    
+    #mask entities
+    X_masked, mapping = mask_entities(X,Y)
+
+    #tokenize the text
+    X_masked = [tokenize_swe.encode(t, return_tensors="pt") for t in X_masked]
+
+    #translate sense into Swedish
+    X_translated = [model_swe.generate(t, num_beams=4, max_length=400) for t in X_masked]
+
+    #decode the translation
+    X_translated = [tokenize_swe.decode(t[0], skip_special_tokens=True) for t in X_translated]
+
+    #translate mapping to Swedish
+    for key, value in mapping.items():
+        entity = value[0]
+        entity = tokenize_swe.encode(entity, return_tensors="pt")
+        entity = model_swe.generate(entity, num_beams=4, max_length=400, early_stopping=True)
+        entity = tokenize_swe.decode(entity[0], skip_special_tokens=True)
+        mapping[key] = [entity, value[1]]
+    
+    #Insert the entities back into the text
+    #also create new Y for the translated text
+    new_X = []
+    new_Y = []
+
+    for i in range(len(X_translated)):
+        #tokenize the text
+        x = X_translated[i].split(" ")
+
+        curr_y = []
+        curr_x = []
+
+        for j in range(len(x)):
+            #remove punctuation
+            word = x[j].strip(string.punctuation)
+   
+            #Check if the word could be an entity
+            if(word[0] == "X"):
+                #Check if the word is an entity
+                if(word in mapping):
+                    curr_y.append(mapping[word][1])
+                    curr_x.append(mapping[word][0])
+                else:
+                    curr_y.append("O")
+                    curr_x.append(word)
+            else:
+                curr_y.append("O")
+                curr_x.append(word)
+
+        new_X.append(curr_x)
+        new_Y.append(curr_y)
+    
+    #return the translated text X and the new Y
+    return new_X, new_Y
 
 def mask_entities(X,Y):
     new_X = []
