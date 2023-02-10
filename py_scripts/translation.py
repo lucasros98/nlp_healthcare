@@ -13,8 +13,8 @@ model_name_en_to_swe = 'Helsinki-NLP/opus-mt-en-sv'
 model_swe = MarianMTModel.from_pretrained(model_name_en_to_swe)
 tokenize_swe = MarianTokenizer.from_pretrained(model_name_en_to_swe)
 
-#Base import on the path when importing vocab.py
-#The path will need to be nlp_healthcare/py_scripts/ner_util
+#Base import on the path when importing from another file
+#The path will need to be nlp_healthcare/py_scripts
 from dotenv import find_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
 
