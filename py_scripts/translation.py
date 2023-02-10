@@ -185,6 +185,9 @@ def translate_from_file(filename, target="en"):
     if target == "en":
         X,Y = read_csv_file(filename)
         return translate_text_to_eng(X,Y)
-    else:
+    elif target == "sv":
         X,Y = read_csv_file(filename)
         return translate_text_to_swe(X,Y)
+    else:
+        print("Target language not supported")
+        return None
