@@ -9,15 +9,18 @@ def show_entities(tagger, sentences):
                                              max_length=tagger.params.bert_max_len).input_ids
         sentences = [[tagger.bert_tokenizer.decode(i) for i in s[1:-1]] for s in word_encoded]
     
-    styles = {
-        'LOC': 'background-color: #aaffaa; color: black;',
-        'PER': 'background-color: #aaaaff; color: black;',
-        'ORG': 'background-color: #ff8800; color: black;',
-        'MISC': 'background-color: #00ffff; color: black;',
+    labels = ['First_Name', 'Last_Name', 'Phone_Number', 'Age', 'Full_Date', 'Date_Part', 'Health_Care_Unit', 'Location']
 
-        'disorder': 'background-color: #ff3333; color: white;',
-        'drug': 'background-color: #44bbff; color: white;',
-        'bodypart': 'background-color: #308227; color: white;'
+    styles = {
+        'First_Name': 'background-color: #aaffaa; color: black;',
+        'Last_Name': 'background-color: #aaaaff; color: black;',
+        'Phone_Number': 'background-color: #ff8800; color: black;',
+        'Age': 'background-color: #00ffff; color: black;',
+        'Full_Date': 'background-color: #ff3333; color: white;',
+        'Date_Part': 'background-color: #44bbff; color: white;',
+        'Health_Care_Unit': 'background-color: #308227; color: white;',
+        'Location': 'background-color: #308227; color: white;'
+
     }
     content = ['<div style="font-size:150%; line-height: 150%;">']
 

@@ -64,15 +64,14 @@ class SequenceBatcher:
        
 
 
-# Aligns encoded output BIO labels with the word pieces created
-# by a BERT tokenizer.
-def remap_entity_indices(word_tokenized, label_encoded, voc):
+# Aligns encoded output BIO labels with the word pieces created by the tokenizer.
+def remap_entity_indices_iob(word_tokenized, label_encoded, voc):
     out = []
     O = voc.stoi['O']
     for i, y in enumerate(label_encoded):
         tokens_sen = word_tokenized[i]
         new_len = len(tokens_sen.ids)
-        spans = to_spans(y, voc)
+        spans = to_spans_iob(y, voc)
         y_new = [y[0]]
         prev = 1
         for start, (lbl, end) in sorted(spans.items()):
@@ -94,9 +93,37 @@ def remap_entity_indices(word_tokenized, label_encoded, voc):
     return out
 
 
+# Aligns encoded output labels (just a lebel or outside) with the word pieces created by the tokenizer.
+def remap_entity_indices(word_tokenized, label_encoded, voc):
+    out = []
+    O = voc.stoi['O']
+    for i, y in enumerate(label_encoded):
+        tokens_sen = word_tokenized[i]
+        new_len = len(tokens_sen.ids)
+        spans = to_spans(y, voc)
+        y_new = [y[0]]
+        prev = 1
+        for start, (lbl, end) in sorted(spans.items()):
+            start_remapped = tokens_sen.word_to_tokens(start-1)#[0]
+            if start_remapped is None:
+                continue
+            y_new.extend([O]*(start_remapped[0]-prev))
+            y_new.append(voc.stoi[lbl])
+                        
+            end_remapped = tokens_sen.word_to_tokens(end-1)
+            if end_remapped is None:
+                end_remapped = (new_len-1, )
+            
+            y_new.extend([voc.stoi[lbl]]*(end_remapped[0]-start_remapped[0]-1))
+            prev = end_remapped[0]
+        y_new.extend([O]*(new_len-prev-1))
+        y_new.append(y[-1])
+        out.append(y_new)
+    return out
+
 # Convert a list of BIO labels, coded as integers, into spans identified by a beginning, an end, and a label.
 # To allow easy comparison later, we store them in a dictionary indexed by the start position.
-def to_spans(l_ids, vocab):
+def to_spans_iob(l_ids, vocab):
     spans = {}
     current_lbl = None
     current_start = None
@@ -136,6 +163,35 @@ def to_spans(l_ids, vocab):
                 current_start = None
     return spans
 
+
+# Convert a list of labels, coded as integers, into spans.
+# To allow easy comparison later, we store them in a dictionary indexed by the start position.
+def to_spans(l_ids, vocab):
+    spans = {}
+    current_lbl = None
+    current_start = None
+    for i, l_id in enumerate(l_ids):
+        l = vocab.itos[l_id]
+        #Check if it is is a label
+
+        if l in ['First_Name', 'Last_Name', 'Phone_Number', 'Age', 'Full_Date', 'Date_Part', 'Health_Care_Unit', 'Location']: 
+            # A named entity
+            if current_lbl:
+                # If we're working on an entity, close it.
+                spans[current_start] = (current_lbl, i)
+            # Create a new entity that starts here.
+            current_lbl = l
+            current_start = i
+        else:
+            # Outside: O.
+            if current_lbl:
+                # If we have an open entity, we close it.
+                spans[current_start] = (current_lbl, i)
+                current_lbl = None
+                current_start = None
+    return spans
+
+
 # Compares two sets of spans and records the results for future aggregation.
 def compare(gold, pred, stats):
     for start, (lbl, end) in gold.items():
@@ -152,7 +208,7 @@ def compare(gold, pred, stats):
                 stats[glbl]['corr'] += 1
 
 # This function combines the auxiliary functions we defined above.
-def evaluate_iob(words, predicted, gold, vocab, stats):
+def evaluate(words, predicted, gold, vocab, stats, tagging_scheme=None):
     
     pad_id = vocab.get_pad_idx()
     padding = list((words == pad_id).reshape(-1).cpu().numpy())
@@ -169,11 +225,18 @@ def evaluate_iob(words, predicted, gold, vocab, stats):
     pred_flat = [pad_id if is_pad else l for l, is_pad in zip(pred_flat, padding)]
     
     # Compute spans for the gold standard and prediction.
-    gold_spans = to_spans(gold_cpu, vocab)
-    pred_spans = to_spans(pred_flat, vocab)
+    print(tagging_scheme)
+    if tagging_scheme == 'BIO':
+        gold_spans = to_spans_iob(gold_cpu, vocab)
+        pred_spans = to_spans_iob(pred_flat, vocab)
+    else:
+        gold_spans = to_spans(gold_cpu, vocab)
+        pred_spans = to_spans(pred_flat, vocab)
+
 
     # Finally, update the counts for correct, predicted and gold-standard spans.
-    compare(gold_spans, pred_spans, stats)
+    compare(gold_spans, pred_spans, stats)    
+
 
 # Computes precision, recall and F-score, given a dictionary that contains
 # the counts of correct, predicted and gold-standard items.
@@ -188,16 +251,15 @@ def prf(stats):
         f = 0
     return p, r, f
 
-
 class SequenceLabeler:
-    def __init__(self, params, model_factory, bert_tokenizer=None):
+    def __init__(self, params, model_factory, bert_tokenizer, verbose=True):
         self.params = params        
         self.model_factory = model_factory
         self.bert_tokenizer = bert_tokenizer
-        self.verbose = bert_tokenizer is not None
+        self.verbose = verbose
 
     # Preprocess the data, build vocabularies and data loaders.
-    def preprocess(self, Xtrain, Ytrain, Xval, Yval):
+    def preprocess(self, Xtrain, Ytrain, Xval, Yval,tagging_scheme=None):
         # Build vocabularies
         p = self.params
         
@@ -207,13 +269,19 @@ class SequenceLabeler:
         self.n_labels = len(self.label_voc)
         train_lbl_encoded = self.label_voc.encode(Ytrain)
         val_lbl_encoded = self.label_voc.encode(Yval)
- 
+        
+        #Tokenize
         train_tokenized = self.bert_tokenizer(Xtrain, is_split_into_words=True, truncation=True, max_length=p.bert_max_len)
         val_tokenized = self.bert_tokenizer(Xval, is_split_into_words=True, truncation=True, max_length=p.bert_max_len)
         
-        train_lbl_encoded = remap_entity_indices(train_tokenized, train_lbl_encoded, self.label_voc)
-        val_lbl_encoded = remap_entity_indices(val_tokenized, val_lbl_encoded, self.label_voc)
-       
+        #Encode labels
+        if(tagging_scheme=='BIO'):
+            train_lbl_encoded = remap_entity_indices_iob(train_tokenized, train_lbl_encoded, self.label_voc)
+            val_lbl_encoded = remap_entity_indices_iob(val_tokenized, val_lbl_encoded, self.label_voc)
+        else: 
+            train_lbl_encoded = remap_entity_indices(train_tokenized, train_lbl_encoded, self.label_voc)
+            val_lbl_encoded = remap_entity_indices(val_tokenized, val_lbl_encoded, self.label_voc)
+        
         train_word_encoded = train_tokenized.input_ids
         val_word_encoded = val_tokenized.input_ids
        
@@ -238,7 +306,7 @@ class SequenceLabeler:
         random.seed(p.random_seed)
                            
         # Preprocess the data, build vocabularies and data loaders.
-        self.preprocess(Xtrain, Ytrain, Xval, Yval)
+        self.preprocess(Xtrain, Ytrain, Xval, Yval, tagging_scheme=p.tagging_scheme)
             
         # Now, let's build the model!
         self.model = self.model_factory(self)
@@ -307,8 +375,8 @@ class SequenceLabeler:
                     predicted = scores.argmax(dim=2)
                     
                     # Update the evaluation statistics for this batch.
-                    evaluate_iob(batch[0], predicted, batch[1], self.label_voc, stats)
-                    
+                    evaluate(batch[0], predicted, batch[1], self.label_voc, stats, tagging_scheme=self.params.tagging_scheme)
+
                     if self.verbose:
                         print('.', end='')
                         sys.stdout.flush()
@@ -370,3 +438,27 @@ class SequenceLabeler:
                     tokens = word_encoded[len(out)]
                     out.append([self.label_voc.itos[pred_id] for _, pred_id in zip(tokens, pred_sen[1:-1])])
         return out
+
+    def evaluate_model(self, X, Y):
+        # This method evaluates the model on test data.
+        
+        word_encoded = self.bert_tokenizer(X, is_split_into_words=True, truncation=True, 
+                                               max_length=self.params.bert_max_len).input_ids
+            
+        label_encoded = [[self.label_voc.stoi[label] for label in labels] for labels in Y]
+        
+        dataset = SequenceDataset(word_encoded,
+                                  label_encoded)
+        loader = DataLoader(dataset, self.params.batch_size, shuffle=False, collate_fn=self.batcher)
+                
+        stats = defaultdict(Counter)
+        self.model.eval()
+        with torch.no_grad():
+            for batch in loader:
+                
+                scores = self.model(batch[0])                
+                predicted = scores.argmax(dim=2) 
+                
+                evaluate(batch[0], predicted, batch[1], self.label_voc, stats, tagging_scheme=self.params.tagging_scheme)
+                
+        return stats
