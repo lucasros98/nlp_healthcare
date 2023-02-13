@@ -5,17 +5,13 @@ channels:
 dependencies:
   - pip
   - jupyter
-  - jupytext
   - python-dotenv
   - tqdm
   # data
   - pandas
   - numpy
-  - collections
-  - csv
   # ML
   - scikit-learn
-  - torch
   - tensorflow
   - scipy
   - nltk
@@ -26,4 +22,7 @@ dependencies:
   - plotly
   - seaborn
   - tabulate
-  - wordcloud
+pip:
+  - huggingface
+  - torch
+  - jupytext
