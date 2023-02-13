@@ -7,6 +7,7 @@ dependencies:
   - jupyter
   - jupytext
   - python-dotenv
+  - tqdm
   # data
   - pandas
   - numpy
@@ -19,6 +20,7 @@ dependencies:
   - scipy
   - nltk
   - spacy
+  - transformers
   # graphics
   - matplotlib
   - plotly

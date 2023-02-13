@@ -60,37 +60,10 @@ def translate_text_to_eng(X,Y):
     
     #Insert the entities back into the text
     #also create new Y for the translated text
-    new_X = []
-    new_Y = []
-    for i in range(len(X_translated)):
-        #tokenize the text
-        x = X_translated[i].split(" ")
-
-        curr_y = []
-        curr_x = []
-
-        for j in range(len(x)):
-            #remove punctuation
-            word = x[j].strip(string.punctuation)
-   
-            #Check if the word could be an entity
-            if(word[0] == "X"):
-                #Check if the word is an entity
-                if(word in mapping):
-                    curr_y.append(mapping[word][1])
-                    curr_x.append(mapping[word][0])
-                else:
-                    curr_y.append("O")
-                    curr_x.append(word)
-            else:
-                curr_y.append("O")
-                curr_x.append(word)
-
-        new_X.append(curr_x)
-        new_Y.append(curr_y)
-
+    X_new, Y_new = unmask_entities(X_translated, mapping)
+    
     #return the translated text X and the new Y
-    return new_X, new_Y
+    return X_new, Y_new
 
 
 def translate_text_to_swe(X,Y):
@@ -122,6 +95,12 @@ def translate_text_to_swe(X,Y):
     
     #Insert the entities back into the text
     #also create new Y for the translated text
+    X_new, Y_new = unmask_entities(X_translated, mapping)
+    
+    #return the translated text X and the new Y
+    return X_new, Y_new
+
+def unmask_entities(X_translated, mapping):
     new_X = []
     new_Y = []
 
@@ -151,9 +130,8 @@ def translate_text_to_swe(X,Y):
 
         new_X.append(curr_x)
         new_Y.append(curr_y)
-    
-    #return the translated text X and the new Y
     return new_X, new_Y
+    
 
 def mask_entities(X,Y):
     new_X = []
