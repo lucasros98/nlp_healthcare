@@ -30,6 +30,10 @@ We implemented two simple baselines, one that predicts the most common tag for e
 This week we also did some writing on the thesis. We wrote about:
 - Transformers
 - BERT
+- Findings and more details about Stockholm EPR PHI Pseudo Corpus
+- Random deletion
+- Method / baseline system
+
   
 We also tried to create a structure for the thesis.
 
@@ -45,6 +49,10 @@ One negative thing is that it takes a long time to translate all the data.
 
 We also started to work on a NER system that we will use later to train the different BERT models. We have a little bit more work to do on this, but we have a good start.
 
+### Data exploration
+- Extracted a list of common abbreviations and their translations, both medical and normal language
+- created a plot of sentence length over number of sentences
+- Extracted the "categories" i.e. the first word of each sentence
 
 ## Thoughts?
 
