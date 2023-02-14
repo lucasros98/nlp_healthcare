@@ -438,29 +438,41 @@ class SequenceLabeler:
                     out.append([self.label_voc.itos[pred_id] for _, pred_id in zip(tokens, pred_sen[1:-1])])
         return out
 
+
+
     def evaluate_model(self, X, Y):
         # This method evaluates the model on test data.
         
-        word_encoded = self.bert_tokenizer(X, is_split_into_words=True, truncation=True, 
-                                               max_length=self.params.bert_max_len).input_ids
-            
-        label_encoded = [[self.label_voc.stoi[label] for label in labels] for labels in Y]
+        word_tokenized = self.bert_tokenizer(X, is_split_into_words=True, truncation=True, 
+                                               max_length=self.params.bert_max_len)
+        
+        label_encoded = self.label_voc.encode(Y)
+
+        #Encode labels
+        if(self.params.tagging_scheme=='BIO'):
+            label_encoded = remap_entity_indices_iob(word_tokenized, label_encoded, self.label_voc)
+        else: 
+            label_encoded = remap_entity_indices(word_tokenized, label_encoded, self.label_voc)
+        
+        word_encoded = word_tokenized.input_ids
         
         dataset = SequenceDataset(word_encoded,
                                   label_encoded)
+
         loader = DataLoader(dataset, self.params.batch_size, shuffle=False, collate_fn=self.batcher)
                 
         stats = defaultdict(Counter)
         self.model.eval()
         with torch.no_grad():
-            for batch in loader:
+            for j, batch in enumerate(loader, 1):
                 
                 scores = self.model(batch[0])                
                 predicted = scores.argmax(dim=2) 
                 
                 evaluate(batch[0], predicted, batch[1], self.label_voc, stats, tagging_scheme=self.params.tagging_scheme)
-                
-        print('Evaluation on the test set:')
+        
+        print('')
+        print('Evaluation on the test set: \n')
         p, r, f1 = prf(stats['total'])
         print(f'Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
         for label in stats:
