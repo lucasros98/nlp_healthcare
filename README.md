@@ -4,6 +4,9 @@ This repository contains the code for our master thesis. The thesis is about usi
 
 The dataset used for this project is the Stockholm EPR PHI Pseudo Corpus.
 
+## Install requirements with pip
+`$ pip install -r requirements.txt`
+
 ## Project structure
 
 The project is structured as follows:
