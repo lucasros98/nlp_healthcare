@@ -9,3 +9,4 @@
 */SweDeClin-BERT
 /env
 */ner_util/__pycache__
+!requirements.txt
