@@ -1,5 +1,6 @@
 import pandas as pd
 import ast
+import os
 
 #read csv file given a path and return X and Y
 def read_csv(path):
@@ -18,12 +19,15 @@ def read_csv(path):
 
 #read csv file given a filename from data folder
 def read_csv_file(filename):
-    return read_csv("../data/" + filename)
+    if(os.environ.get("DATA_DIR") == None):
+        print("Please set the DATA_DIR environment variable.")
+        return None, None
+    return read_csv(os.environ.get("DATA_DIR") + filename)
 
 #write csv file given a filename and X and Y
 def write_csv_file(filename, X, Y):
     try:
         result = pd.DataFrame({"X": X, "Y": Y})
-        result.to_csv("../data/"+filename+".csv")
+        result.to_csv(os.environ.get("DATA_DIR")+filename+".csv")
     except:
-        print("Error occured while creating csv file. Please check the path and file name.")
+        print("Error occured while creating csv file. Please check the enviorment variables DATA_DIR and file name.")
