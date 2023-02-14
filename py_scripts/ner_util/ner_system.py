@@ -225,7 +225,6 @@ def evaluate(words, predicted, gold, vocab, stats, tagging_scheme=None):
     pred_flat = [pad_id if is_pad else l for l, is_pad in zip(pred_flat, padding)]
     
     # Compute spans for the gold standard and prediction.
-    print(tagging_scheme)
     if tagging_scheme == 'BIO':
         gold_spans = to_spans_iob(gold_cpu, vocab)
         pred_spans = to_spans_iob(pred_flat, vocab)
@@ -461,4 +460,10 @@ class SequenceLabeler:
                 
                 evaluate(batch[0], predicted, batch[1], self.label_voc, stats, tagging_scheme=self.params.tagging_scheme)
                 
-        return stats
+        print('Evaluation on the test set:')
+        p, r, f1 = prf(stats['total'])
+        print(f'Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
+        for label in stats:
+            if label != 'total':
+                p, r, f1 = prf(stats[label])
+                print(f'{label:4s}: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
