@@ -2,6 +2,7 @@ from transformers import MarianMTModel, MarianTokenizer
 import string
 import sys
 from tqdm import tqdm
+import torch
 import os
 
 #Load MarianMT models from HuggingFace
@@ -15,11 +16,14 @@ tokenize_swe = MarianTokenizer.from_pretrained(model_name_en_to_swe)
 
 #Base import on the path when importing from another file
 #The path will need to be nlp_healthcare/py_scripts
-from dotenv import find_dotenv
+from dotenv import find_dotenv,load_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
+load_dotenv(find_dotenv())
 
 from file_handler import read_csv_file
 
+#Change to cuda if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 #This function translate Swedish text data into English by using 
 # sense for sense translation
@@ -29,41 +33,42 @@ def translate_text_to_eng(X,Y):
     print("Masking entities...")
     X_masked, mapping = mask_entities(X,Y)
 
-    #tokenize the text
+    #Tokenize the text
     print("Tokenizing the text...")
-    X_masked = [tokenize_en.encode(t, return_tensors="pt") for t in X_masked]
+    X_masked = tokenize_en(X_masked, return_tensors="pt",padding=True)
+
+    model_en.to(device)
+    X_masked = X_masked.to(device)
 
     #translate sense into English
     print("Translating the text...")
-    X_translated = []
-    for i in tqdm(range(len(X_masked))):
-        t = X_masked[i]
-        t = model_en.generate(t, num_beams=4, max_length=400)
-        X_translated.append(t)
+    X_translated = model_en.generate(**X_masked, num_beams=2, max_length=512, early_stopping=True)
 
     #decode the translation
     print("Decoding the text...")
-    for i in tqdm(range(len(X_translated))):
-        X_translated[i] = tokenize_en.decode(X_translated[i][0], skip_special_tokens=True)
-
-    X_translated = [tokenize_en.decode(t[0], skip_special_tokens=True) for t in X_translated]
+    X_translated = tokenize_en.batch_decode(X_translated, skip_special_tokens=True)
 
     #translate mapping to English
     print("Translating the mapping...")
+    entities = [mapping[i][0] for i in range(len(mapping))]
+    entities = tokenize_en(entities,padding=True, return_tensors="pt")
+    entities = entities.to(device)
+    entities = model_en.generate(**entities, num_beams=2, max_length=512, early_stopping=True)
+    entities = tokenize_en.batch_decode(entities, skip_special_tokens=True)
+    for i in range(len(mapping)):
+        mapping[i][0] = entities[i]
 
-    for key, value in mapping.items():
-        entity = value[0]
-        entity = tokenize_en.encode(entity, return_tensors="pt")
-        entity = model_en.generate(entity, num_beams=4, max_length=400, early_stopping=True)
-        entity = tokenize_en.decode(entity[0], skip_special_tokens=True)
-        mapping[key] = [entity, value[1]]
+    #Insert the entities back into the text
+    mapping = mapping.to("cpu")
+    X_translated = X_translated.to("cpu")
     
     #Insert the entities back into the text
     #also create new Y for the translated text
     X_new, Y_new = unmask_entities(X_translated, mapping)
     
     #return the translated text X and the new Y
-    return X_new, Y_new
+    print("Returning the translated text...")
+    print(X_new[0], Y_new[0])
 
 
 def translate_text_to_swe(X,Y):
@@ -72,26 +77,34 @@ def translate_text_to_swe(X,Y):
     print("Masking entities...")
     X_masked, mapping = mask_entities(X,Y)
 
+    #Change X-masked to current device
+    X_masked = X_masked.to(device)
+    mapping = mapping.to(device)
+
     #tokenize the text
     print("Tokenizing the text...")
-    X_masked = [tokenize_swe.encode(t, return_tensors="pt") for t in X_masked]
+    X_masked = tokenize_swe(X_masked, return_tensors="pt")
 
     #translate sense into Swedish
     print("Translating the text...")
-    X_translated = [model_swe.generate(t, num_beams=4, max_length=400) for t in X_masked]
+    X_translated = model_swe.generate(**X_masked, num_beams=3, max_length=512, early_stopping=True)
 
     #decode the translation
     print("Decoding the text...")
-    X_translated = [tokenize_swe.decode(t[0], skip_special_tokens=True) for t in X_translated]
+    X_translated = tokenize_swe.batch_decode(X_translated, skip_special_tokens=True)
 
     #translate mapping to Swedish
     print("Translating the mapping...")
-    for key, value in mapping.items():
-        entity = value[0]
-        entity = tokenize_swe.encode(entity, return_tensors="pt")
-        entity = model_swe.generate(entity, num_beams=4, max_length=400, early_stopping=True)
-        entity = tokenize_swe.decode(entity[0], skip_special_tokens=True)
-        mapping[key] = [entity, value[1]]
+    entities = [mapping[i][0] for i in range(len(mapping))]
+    entities = tokenize_en(entities, return_tensors="pt")
+    entities = model_en.generate(**entities, num_beams=2, max_length=512, early_stopping=True)
+    entities = tokenize_en.batch_decode(entities, skip_special_tokens=True)
+    for i in range(len(mapping)):
+        mapping[i][0] = entities[i]
+
+    #change to cpu
+    mapping = mapping.to("cpu")
+    X_translated = X_translated.to("cpu")
     
     #Insert the entities back into the text
     #also create new Y for the translated text
@@ -162,6 +175,7 @@ def mask_entities(X,Y):
 def translate_from_file(filename, target="en"):
     if target == "en":
         X,Y = read_csv_file(filename)
+        print(X[0])
         return translate_text_to_eng(X,Y)
     elif target == "sv":
         X,Y = read_csv_file(filename)
@@ -169,3 +183,7 @@ def translate_from_file(filename, target="en"):
     else:
         print("Target language not supported")
         return None
+    
+
+
+translate_from_file("clean.csv", target="en")
