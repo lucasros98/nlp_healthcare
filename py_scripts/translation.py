@@ -20,7 +20,7 @@ from dotenv import find_dotenv,load_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
 load_dotenv(find_dotenv())
 
-from file_handler import read_csv_file
+from file_handler import read_csv_file,write_csv_file
 
 #Change to cuda if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -35,12 +35,10 @@ def translate_text_to_eng(X,Y):
 
     X_masked, mapping = mask_entities(X,Y)
 
-    X_masked = tokenize_en(X_masked, return_tensors="pt",padding=True)
-
     model_en.to(device)
-    X_masked = X_masked.to(device)
+    X_masked = tokenize_en(X_masked, return_tensors="pt",padding=True).to(device)
 
-    X_translated = model_en.generate(**X_masked, num_beams=2, max_length=512, early_stopping=True)
+    X_translated = model_en.generate(**X_masked, num_beams=3, max_length=512, early_stopping=True).to("cpu")
 
     X_translated = tokenize_en.batch_decode(X_translated, skip_special_tokens=True)
 
@@ -49,9 +47,8 @@ def translate_text_to_eng(X,Y):
         entities.append(value[0])
 
     if(len(entities) != 0):
-        entities = tokenize_en(entities,padding=True, return_tensors="pt")
-        entities = entities.to(device)
-        entities = model_en.generate(**entities, num_beams=2, max_length=512, early_stopping=True)
+        entities = tokenize_en(entities,padding=True, return_tensors="pt").to(device)
+        entities = model_en.generate(**entities, num_beams=3, max_length=512, early_stopping=True).to("cpu")
         entities = tokenize_en.batch_decode(entities, skip_special_tokens=True)
         
         #Append the entities to the mapping
@@ -127,32 +124,31 @@ def mask_entities(X,Y):
     
     return new_X, linkage
 
-def translate_from_file(filename, target="en",batch_size = 32):
-            
-    if target == "en":
-        X,Y = read_csv_file(filename)
+def translate_from_file(filename,batch_size=64):
 
-        X_res, Y_res = [],[]
-        for i in tqdm(range(0,len(X),batch_size)):
-            X_batch = X[i:i+batch_size]
-            Y_batch = Y[i:i+batch_size]
+    if(filename == None):
+        return None,None            
 
-            #translate the batch
-            X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch)
-            
-            #append the results
-            X_res += X_translated
-            Y_res += Y_translated
+    print("Reading file...")
+    X,Y = read_csv_file(filename)
 
-        #print first 10 results 
-        print(X_res[:10])
-        return translate_text_to_eng(X,Y)
-    elif target == "sv":
-        return None,None
-    else:
-        print("Target language not supported")
-        return None,None
+    X_res, Y_res = [],[]
+    print("Starting to process batches...")
+    for i in tqdm(range(0,len(X),batch_size)):
+        X_batch = X[i:i+batch_size]
+        Y_batch = Y[i:i+batch_size]
+
+        #Translate the batch
+        X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch)
+
+        #Append the results
+        X_res += X_translated
+        Y_res += Y_translated
+
+    #print first 10 results 
+    print(X_res[:10])
+    return X_res,Y_res
     
 
-
-translate_from_file("clean.csv", target="en")
+X,Y = translate_from_file("clean.csv")
+write_csv_file("translated",X,Y)
