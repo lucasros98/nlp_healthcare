@@ -25,8 +25,8 @@ from file_handler import read_csv_file,write_csv_file
 #Change to cuda if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-if(device == "cuda"):
-    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:8"
+#if(device == "cuda"):
+#    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:8"
 
 print("Running on: ",device)
 #This function translate Swedish text data into English by using 
