@@ -25,92 +25,43 @@ from file_handler import read_csv_file
 #Change to cuda if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+if(device == "cuda"):
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:8"
+
+print("Running on: ",device)
 #This function translate Swedish text data into English by using 
 # sense for sense translation
 def translate_text_to_eng(X,Y):
 
-    #mask entities
-    print("Masking entities...")
     X_masked, mapping = mask_entities(X,Y)
 
-    #Tokenize the text
-    print("Tokenizing the text...")
     X_masked = tokenize_en(X_masked, return_tensors="pt",padding=True)
 
     model_en.to(device)
     X_masked = X_masked.to(device)
 
-    #translate sense into English
-    print("Translating the text...")
     X_translated = model_en.generate(**X_masked, num_beams=2, max_length=512, early_stopping=True)
 
-    #decode the translation
-    print("Decoding the text...")
     X_translated = tokenize_en.batch_decode(X_translated, skip_special_tokens=True)
 
-    #translate mapping to English
-    print("Translating the mapping...")
-    entities = [mapping[i][0] for i in range(len(mapping))]
-    entities = tokenize_en(entities,padding=True, return_tensors="pt")
-    entities = entities.to(device)
-    entities = model_en.generate(**entities, num_beams=2, max_length=512, early_stopping=True)
-    entities = tokenize_en.batch_decode(entities, skip_special_tokens=True)
-    for i in range(len(mapping)):
-        mapping[i][0] = entities[i]
+    entities = []
+    for key, value in mapping.items():
+        entities.append(value[0])
 
-    #Insert the entities back into the text
-    mapping = mapping.to("cpu")
-    X_translated = X_translated.to("cpu")
-    
+    if(len(entities) != 0):
+        entities = tokenize_en(entities,padding=True, return_tensors="pt")
+        entities = entities.to(device)
+        entities = model_en.generate(**entities, num_beams=2, max_length=512, early_stopping=True)
+        entities = tokenize_en.batch_decode(entities, skip_special_tokens=True)
+        
+        #Append the entities to the mapping
+        for i in range(len(entities)):
+            mapping[list(mapping.keys())[i]].append(entities[i])
+
     #Insert the entities back into the text
     #also create new Y for the translated text
     X_new, Y_new = unmask_entities(X_translated, mapping)
     
-    #return the translated text X and the new Y
-    print("Returning the translated text...")
-    print(X_new[0], Y_new[0])
-
-
-def translate_text_to_swe(X,Y):
-    
-    #mask entities
-    print("Masking entities...")
-    X_masked, mapping = mask_entities(X,Y)
-
-    #Change X-masked to current device
-    X_masked = X_masked.to(device)
-    mapping = mapping.to(device)
-
-    #tokenize the text
-    print("Tokenizing the text...")
-    X_masked = tokenize_swe(X_masked, return_tensors="pt")
-
-    #translate sense into Swedish
-    print("Translating the text...")
-    X_translated = model_swe.generate(**X_masked, num_beams=3, max_length=512, early_stopping=True)
-
-    #decode the translation
-    print("Decoding the text...")
-    X_translated = tokenize_swe.batch_decode(X_translated, skip_special_tokens=True)
-
-    #translate mapping to Swedish
-    print("Translating the mapping...")
-    entities = [mapping[i][0] for i in range(len(mapping))]
-    entities = tokenize_en(entities, return_tensors="pt")
-    entities = model_en.generate(**entities, num_beams=2, max_length=512, early_stopping=True)
-    entities = tokenize_en.batch_decode(entities, skip_special_tokens=True)
-    for i in range(len(mapping)):
-        mapping[i][0] = entities[i]
-
-    #change to cpu
-    mapping = mapping.to("cpu")
-    X_translated = X_translated.to("cpu")
-    
-    #Insert the entities back into the text
-    #also create new Y for the translated text
-    X_new, Y_new = unmask_entities(X_translated, mapping)
-    
-    #return the translated text X and the new Y
     return X_new, Y_new
 
 def unmask_entities(X_translated, mapping):
@@ -127,7 +78,11 @@ def unmask_entities(X_translated, mapping):
         for j in range(len(x)):
             #remove punctuation
             word = x[j].strip(string.punctuation)
-   
+            
+            #continue if the word is empty
+            if(len(word) == 0):
+                continue
+    
             #Check if the word could be an entity
             if(word[0] == "X"):
                 #Check if the word is an entity
@@ -172,17 +127,31 @@ def mask_entities(X,Y):
     
     return new_X, linkage
 
-def translate_from_file(filename, target="en"):
+def translate_from_file(filename, target="en",batch_size = 32):
+            
     if target == "en":
         X,Y = read_csv_file(filename)
-        print(X[0])
+
+        X_res, Y_res = [],[]
+        for i in tqdm(range(0,len(X),batch_size)):
+            X_batch = X[i:i+batch_size]
+            Y_batch = Y[i:i+batch_size]
+
+            #translate the batch
+            X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch)
+            
+            #append the results
+            X_res += X_translated
+            Y_res += Y_translated
+
+        #print first 10 results 
+        print(X_res[:10])
         return translate_text_to_eng(X,Y)
     elif target == "sv":
-        X,Y = read_csv_file(filename)
-        return translate_text_to_swe(X,Y)
+        return None,None
     else:
         print("Target language not supported")
-        return None
+        return None,None
     
 
 
