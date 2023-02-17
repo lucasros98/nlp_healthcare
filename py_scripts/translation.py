@@ -2,6 +2,7 @@ from transformers import MarianMTModel, MarianTokenizer
 import string
 import sys
 from tqdm import tqdm
+import torch
 import os
 
 #Load MarianMT models from HuggingFace
@@ -15,89 +16,49 @@ tokenize_swe = MarianTokenizer.from_pretrained(model_name_en_to_swe)
 
 #Base import on the path when importing from another file
 #The path will need to be nlp_healthcare/py_scripts
-from dotenv import find_dotenv
+from dotenv import find_dotenv,load_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
+load_dotenv(find_dotenv())
 
-from file_handler import read_csv_file
+from file_handler import read_csv_file,write_csv_file
 
+#Change to cuda if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+#if(device == "cuda"):
+#    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:8"
+
+print("Running on: ",device)
 #This function translate Swedish text data into English by using 
 # sense for sense translation
 def translate_text_to_eng(X,Y):
 
-    #mask entities
-    print("Masking entities...")
     X_masked, mapping = mask_entities(X,Y)
 
-    #tokenize the text
-    print("Tokenizing the text...")
-    X_masked = [tokenize_en.encode(t, return_tensors="pt") for t in X_masked]
+    model_en.to(device)
+    X_masked = tokenize_en(X_masked, return_tensors="pt",padding=True).to(device)
 
-    #translate sense into English
-    print("Translating the text...")
-    X_translated = []
-    for i in tqdm(range(len(X_masked))):
-        t = X_masked[i]
-        t = model_en.generate(t, num_beams=4, max_length=400)
-        X_translated.append(t)
+    X_translated = model_en.generate(**X_masked, num_beams=3, max_length=512, early_stopping=True).to("cpu")
 
-    #decode the translation
-    print("Decoding the text...")
-    for i in tqdm(range(len(X_translated))):
-        X_translated[i] = tokenize_en.decode(X_translated[i][0], skip_special_tokens=True)
+    X_translated = tokenize_en.batch_decode(X_translated, skip_special_tokens=True)
 
-    X_translated = [tokenize_en.decode(t[0], skip_special_tokens=True) for t in X_translated]
-
-    #translate mapping to English
-    print("Translating the mapping...")
-
+    entities = []
     for key, value in mapping.items():
-        entity = value[0]
-        entity = tokenize_en.encode(entity, return_tensors="pt")
-        entity = model_en.generate(entity, num_beams=4, max_length=400, early_stopping=True)
-        entity = tokenize_en.decode(entity[0], skip_special_tokens=True)
-        mapping[key] = [entity, value[1]]
-    
+        entities.append(value[0])
+
+    if(len(entities) != 0):
+        entities = tokenize_en(entities,padding=True, return_tensors="pt").to(device)
+        entities = model_en.generate(**entities, num_beams=3, max_length=512, early_stopping=True).to("cpu")
+        entities = tokenize_en.batch_decode(entities, skip_special_tokens=True)
+        
+        #Append the entities to the mapping
+        for i in range(len(entities)):
+            mapping[list(mapping.keys())[i]].append(entities[i])
+
     #Insert the entities back into the text
     #also create new Y for the translated text
     X_new, Y_new = unmask_entities(X_translated, mapping)
     
-    #return the translated text X and the new Y
-    return X_new, Y_new
-
-
-def translate_text_to_swe(X,Y):
-    
-    #mask entities
-    print("Masking entities...")
-    X_masked, mapping = mask_entities(X,Y)
-
-    #tokenize the text
-    print("Tokenizing the text...")
-    X_masked = [tokenize_swe.encode(t, return_tensors="pt") for t in X_masked]
-
-    #translate sense into Swedish
-    print("Translating the text...")
-    X_translated = [model_swe.generate(t, num_beams=4, max_length=400) for t in X_masked]
-
-    #decode the translation
-    print("Decoding the text...")
-    X_translated = [tokenize_swe.decode(t[0], skip_special_tokens=True) for t in X_translated]
-
-    #translate mapping to Swedish
-    print("Translating the mapping...")
-    for key, value in mapping.items():
-        entity = value[0]
-        entity = tokenize_swe.encode(entity, return_tensors="pt")
-        entity = model_swe.generate(entity, num_beams=4, max_length=400, early_stopping=True)
-        entity = tokenize_swe.decode(entity[0], skip_special_tokens=True)
-        mapping[key] = [entity, value[1]]
-    
-    #Insert the entities back into the text
-    #also create new Y for the translated text
-    X_new, Y_new = unmask_entities(X_translated, mapping)
-    
-    #return the translated text X and the new Y
     return X_new, Y_new
 
 def unmask_entities(X_translated, mapping):
@@ -114,7 +75,11 @@ def unmask_entities(X_translated, mapping):
         for j in range(len(x)):
             #remove punctuation
             word = x[j].strip(string.punctuation)
-   
+            
+            #continue if the word is empty
+            if(len(word) == 0):
+                continue
+    
             #Check if the word could be an entity
             if(word[0] == "X"):
                 #Check if the word is an entity
@@ -159,13 +124,31 @@ def mask_entities(X,Y):
     
     return new_X, linkage
 
-def translate_from_file(filename, target="en"):
-    if target == "en":
-        X,Y = read_csv_file(filename)
-        return translate_text_to_eng(X,Y)
-    elif target == "sv":
-        X,Y = read_csv_file(filename)
-        return translate_text_to_swe(X,Y)
-    else:
-        print("Target language not supported")
-        return None
+def translate_from_file(filename,batch_size=64):
+
+    if(filename == None):
+        return None,None            
+
+    print("Reading file...")
+    X,Y = read_csv_file(filename)
+
+    X_res, Y_res = [],[]
+    print("Starting to process batches...")
+    for i in tqdm(range(0,len(X),batch_size)):
+        X_batch = X[i:i+batch_size]
+        Y_batch = Y[i:i+batch_size]
+
+        #Translate the batch
+        X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch)
+
+        #Append the results
+        X_res += X_translated
+        Y_res += Y_translated
+
+    #print first 10 results 
+    print(X_res[:10])
+    return X_res,Y_res
+    
+
+X,Y = translate_from_file("clean.csv")
+write_csv_file("translated",X,Y)
