@@ -8,9 +8,9 @@ text_examples_sv = [
     'Besöksorsak	Kontakt med dr Kayed, tel nr 0711442373. Pat är 82 år, längd 175 cm och mår illa efter måltider.',
 ]
 text_examples_en = [
-    "If you have asthma, you will need to take inhalers or other medications every day to help you breathe easier.",
-    "The patient has a brain tumor and will need to undergo surgery to remove it",
-    "The patient has anemia and will need to take iron supplements and eat foods rich in iron to improve their red blood cell count."
+    "ssk Lisa tries to get hold of BIB Jonas Berg. If necessary, inform the pat wife when the place is available at Sophiahemmet. Hopefully before 20230221",
+    "Action Dietist will be in touch and will reschedule the time to 12/7 at 2 p.m. Visits will be made on avd 314",
+    "Contact with Dr. Kayed, tel. 0711442373. Pat is 82 years old, length 175 cm and feels nauseous after meals."
 ]
 
 def print_examples(ner_system, lang):
