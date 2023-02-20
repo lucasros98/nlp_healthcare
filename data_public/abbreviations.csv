@@ -1,0 +1,207 @@
+hö;höger
+vä;vänster
+äv;även
+fr;från
+ef;Ejektionsfraktionen
+im;Intramuskulär
+pk;protrombinkomplex
+pat;patient
+beh;behandlas
+alt;alternativt
+uvi;Urinvägsinfektion
+hia;hjärtinfarktavdelning
+pcr;Polymerase Chain Reaction
+cdk;central dialyskateter
+bed;bedömning
+bakt;bakterier
+rel;relativt
+perm;permission
+mkt;mycket
+stud;student
+vb;vid behov
+ang;angående
+enl;enligt
+enh;enhet
+ab;antibiotika
+AF;andningsfrekvens
+AT;allmäntillstånd
+AT;allmäntjänstgöring
+avd;avdelning
+bltr;blodtryck
+BT;blodtryck
+DM;diabetes mellitus
+dsk;distriktssköterska
+EDA;epiduralanestesi
+enl;enligt
+FF;förmaksflimmer
+GCS;Glasgow Coma Scale
+ger;geriatrik
+HF;hjärtfrekvens
+ht;hemtjänst
+HT;hypertoni
+hv;huvudvärk
+hö;höger
+IBD;inflammatorisk tarmsjukdom
+inf;infektion
+inf;inferior
+intox;intoxikation
+KAD;kvarliggande urinkateter
+lat;laterala
+lgll;lymfkörtlar
+lm;läkemedel
+med;mediala
+MoS;mun och svalg
+MR;magnetresonansundersökning
+obs;observation
+op;operation
+OR;oregelbunden rytm
+pal;patientansvarig läkare
+palp;palpation
+pas;patientansvarig sjuksköterska
+pat;patient
+pbd;preliminär bedömning
+pulm;lungor
+pv;primärvård
+pvk;perifer venkateter
+RR;regelbunden rytm
+rtg;röntgen
+sat;saturation av syre i blodet
+sksk;skelettskada
+ssk;sjuksköterska
+STEMI;ST-höjningsinfarkt
+temp;temperatur
+ua;utan anmärkning
+UL;ultraljud
+ul;underläkare
+us;undersökning
+us;utskrivningssamtal
+uska;undersköterska
+usk;undersköterska
+vc;vårdcentral
+vä;vänster
+X:a;extrauterin graviditet
+åb;återbesök
+öl;överläkare
+CT/DT;Computed tomography/Datortomgrafi
+HSL;Hälso- och sjukvårdslagen
+INCA;Informationsnätverk för cancervården
+IPÖ;Individuell patientöversikt
+IVO;Inspektionen för vård och omsorg
+KSSK;Kontaktsjuksköterska
+LPO;Lokalt programområde
+LÖF;Regionernas ömsesidiga försäkringsbolag
+MDK;Multidisciplinär konferens
+MR/MRT/MRI;Magnetisk resonanstomografi, magnetkameraundersökning
+MVP;Min vårdplan
+NAG;Nationell arbetsgrupp
+NPE;Nationell Patientenkät
+NPÖ;Nationell patientöversikt
+NPO;Nationellt programområde
+NVP;Nationella vårdprogram
+PAD;Patologisk-anatomisk diagnos
+PET;Positronemissionstomografi
+PNR;Patient- och närståenderådet
+PREM;Patient reported experience measures
+PROM;Patient reported outcome measures
+RCC;Regionalt cancercentrum
+RPO;Regionalt programområde
+SKR;Sveriges kommuner och regioner
+SoS;Socialstyrelsen
+SVF;Standardiserade vårdförlopp
+Absc;Abscess
+Amn;Amnionvätska
+Asc;Ascites
+B;Blod
+BAL;Bronkoalveolärt lavage
+Bal;Bronkoalveolärt lavage
+BM;Benmärg
+Bronk;Bronkialsekret
+CAPD;Peritonealdialysvätska
+Csv;Cerebrospinalvätska
+Sp;Cerebrospinalvätska
+CVB;Chorionvillibiopsi
+Cx;Cervixsekret
+CxU;Cervixsekret i urin
+Dia;Dialysvätska
+Drän sp;Drän spets
+Drän vtsk;Drän vätska
+Erc;Erytrocyter
+F;Feces
+F färsk;Feces färskprov
+Fib;Fibroblaster
+Fo vtn;Fostervatten 
+Hudskr;Hudskrap
+Instick;Kateter infart
+Konj;Konjunktivalsekret
+Kärl sp;Kärlkateterspets
+Ledv;Ledvätska
+Lkc;Leukocyter
+Lyc;Lymfocyter
+Nf;Nasofarynx, sekret
+Nf asp;Nasofarynx, aspirat
+Näs;Näsa
+P;Plasma
+PBMC;EDTA-rör för HIV odling
+PD-vätska, pd;Peritonealdialysvätska
+Peric;Pericardvätska
+Perin;Perineum
+Plac;Placenta
+Pleura;Pleuravätska
+Ple;Pleuravätska
+Pt;Patient
+Rekt;Rektum
+S;Serum
+Sekr;Sekret
+Sput;Sputum
+Sput CF;Sputum, cystisk fibros
+Sv;Svalg
+Tejp;Tejpprov
+Trak;Trakelasekret
+Trc;Trombocyter
+Ual;Utandningsluft
+U;Urin
+U KAD;Urin, kateter
+Ur;Uretra
+Vag;Vaginalsekret
+Vag rekt;Vaginalsekret / rektum
+VagU;Vaginalsekret i Urin
+Vsk;Ventrikelsköljvätska
+V;Vävnad/Biopsi
+Övr;Övrigt
+ADR;Alkohol- och drogrådgivningen
+AML;Arbetsmiljölagen
+AU;Arbetsutskott
+BUF;Barn- och utbildningsförvaltningen
+BUN;Barn- och utbildningsnämnden
+BN;Byggnadsnämnden
+CT;Datortomografi
+FTV;Folktandvården
+FoU;Forskning och utveckling
+GVF;Gymnasie- och vuxenutbildningsförvaltningen
+GVN;Gymnasie- och vuxenutbildningsnämnden
+HSF;Hälso- och sjukvårdsförvaltningen
+HSL;Hälso- och sjukvårdslagen
+HSN;Hälso- och sjukvårdsnämnden
+IVO;Inspektionen för vård och omsorg
+JO;Justitieombudsmannen
+KBT;Kognitiv beteendeterapi
+KoK;Krav- och Kvalitetsboken
+LPT;Lag om psykiatrisk tvångsvård
+LRV;Lag om rättspsykiatrisk vård
+LSS;Lag om stöd och service till vissa funktionshindrade
+LOV;Lag om valfrihetssystem
+LVM;Lag om vård av missbrukare i vissa fall
+MAS;Medicinskt ansvarig sjuksköterska
+NPÖ;Nationell patientöversikt
+PL;Patientlag
+PAN;Patientnämnden
+PuL;Personuppgiftslagen
+PTSD;Posttraumatiskt stressyndrom
+iom;i och med
+osv;och så vidare
+mvh;med vänliga hälsningar
+tkr;tycker
+ibl;ibland
+tpn;total parenteral nutrition
+ggr;gånger
+
