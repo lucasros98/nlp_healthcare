@@ -91,6 +91,12 @@ Make sure that all allocated resources are used
 
 `scancel`
 
+To run multiple jobs at once:
+
+```bash
+    sbatch --array=25,50,75,100 multi
+```
+
 ## Job command overview
 - `sbatch`: submit batch jobs
 - `srun`: submit interactive jobs
