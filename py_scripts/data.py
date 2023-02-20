@@ -1,4 +1,6 @@
 import pandas as pd
+from file_handler import read_public_csv
+
 
 def get_tokens(data):
     tokens = {}
@@ -51,3 +53,33 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.sort_values(by=['count'], ascending=False)
         df = df.head(n)
         print(df)
+
+#Replace the abbreviations in the data with the corresponding tokens
+def decode_abbrevs(X,Y):
+    dict = read_public_csv("abbreviations.csv")
+
+    X_new, Y_new = [],[]
+
+    for i in range(len(X)):
+        curr_x, curr_y = [],[]
+
+        for j in range(len(X[i])):
+            if(X[i][j] in dict):
+                #Get the abbreviation
+                abrev = dict[X[i][j]]
+
+                #Tokenize the abbreviation
+                abrev = abrev.split(" ")
+
+                #Replace the abbreviation with the tokens
+                for k in range(len(abrev)):
+                    curr_x.append(abrev[k])
+                    curr_y.append(Y[i][j])
+            else:
+                #Append the original word
+                curr_x.append(X[i][j])
+                curr_y.append(Y[i][j])
+        X_new.append(curr_x)
+        Y_new.append(curr_y)
+
+    return X_new, Y_new

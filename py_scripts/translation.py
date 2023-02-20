@@ -20,6 +20,7 @@ sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
 load_dotenv(find_dotenv())
 
 from file_handler import read_csv_file, write_csv_file
+from data import decode_abbrevs
 
 #Change to cuda if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -30,7 +31,7 @@ class TranslationParameters():
     num_beams=4
     early_stopping=True
     max_length=512
-    decode_abrevs=False
+    abrevs=False
 
 #Translate Swedish text data into English by using 
 def translate_text_to_eng(X,Y,params):
@@ -126,9 +127,6 @@ def mask_entities(X,Y):
     
     return new_X, linkage
 
-def decode_abbrevs(X):
-    #Do some stuff
-    return X
 
 def translate_from_file(filename,batch_size=64):
 
@@ -141,8 +139,8 @@ def translate_from_file(filename,batch_size=64):
     X,Y = read_csv_file(filename)
 
     #Decode clincal abbreviations
-    if params.decode_abrevs:
-       X = decode_abbrevs(X)
+    if params.abrevs:
+       X,Y = decode_abbrevs(X,Y)
 
     X_res, Y_res = [],[]
     print("Starting to process batches...")
