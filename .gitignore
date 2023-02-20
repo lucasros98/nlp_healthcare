@@ -11,3 +11,11 @@
 /env
 */ner_util/__pycache__
 !requirements.txt
+
+# Exclude public data (individually)
+!data_public/first_names_men.csv
+!data_public/first_names_women.csv
+!data_public/last_names.csv
+
+
+
