@@ -8,7 +8,7 @@ class NERParameters():
     # cuda or cpu
     device = "cuda" if torch.cuda.is_available() else "cpu"   
     
-    #Tagging scheme used in data: IO or IOB (Inside-Outside-Beginning)
+    #Tagging scheme used in data: IO or BIO (Inside-Outside-Beginning)
     tagging_scheme=None
     
     #Training parameters
