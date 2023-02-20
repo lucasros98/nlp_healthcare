@@ -82,7 +82,8 @@ vä;vänster
 X:a;extrauterin graviditet
 åb;återbesök
 öl;överläkare
-CT/DT;Computed tomography/Datortomgrafi
+CT;Computed tomography
+DT;Datortomgrafi
 HSL;Hälso- och sjukvårdslagen
 INCA;Informationsnätverk för cancervården
 IPÖ;Individuell patientöversikt
@@ -91,7 +92,9 @@ KSSK;Kontaktsjuksköterska
 LPO;Lokalt programområde
 LÖF;Regionernas ömsesidiga försäkringsbolag
 MDK;Multidisciplinär konferens
-MR/MRT/MRI;Magnetisk resonanstomografi, magnetkameraundersökning
+MR;Magnetisk resonanstomografi
+MRT;Magnetisk resonanstomografiskt
+MRI;Magnetisk resonanstomografi
 MVP;Min vårdplan
 NAG;Nationell arbetsgrupp
 NPE;Nationell Patientenkät
@@ -105,7 +108,6 @@ PREM;Patient reported experience measures
 PROM;Patient reported outcome measures
 RCC;Regionalt cancercentrum
 RPO;Regionalt programområde
-SKR;Sveriges kommuner och regioner
 SoS;Socialstyrelsen
 SVF;Standardiserade vårdförlopp
 Absc;Abscess
@@ -141,8 +143,7 @@ Nf;Nasofarynx, sekret
 Nf asp;Nasofarynx, aspirat
 Näs;Näsa
 P;Plasma
-PBMC;EDTA-rör för HIV odling
-PD-vätska, pd;Peritonealdialysvätska
+PD-vätska;Peritonealdialysvätska
 Peric;Pericardvätska
 Perin;Perineum
 Plac;Placenta
@@ -163,7 +164,6 @@ U;Urin
 U KAD;Urin, kateter
 Ur;Uretra
 Vag;Vaginalsekret
-Vag rekt;Vaginalsekret / rektum
 VagU;Vaginalsekret i Urin
 Vsk;Ventrikelsköljvätska
 V;Vävnad/Biopsi
@@ -187,10 +187,7 @@ JO;Justitieombudsmannen
 KBT;Kognitiv beteendeterapi
 KoK;Krav- och Kvalitetsboken
 LPT;Lag om psykiatrisk tvångsvård
-LRV;Lag om rättspsykiatrisk vård
-LSS;Lag om stöd och service till vissa funktionshindrade
-LOV;Lag om valfrihetssystem
-LVM;Lag om vård av missbrukare i vissa fall
+LVM;Lag om vård av missbrukare
 MAS;Medicinskt ansvarig sjuksköterska
 NPÖ;Nationell patientöversikt
 PL;Patientlag
