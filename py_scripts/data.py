@@ -7,6 +7,16 @@ sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
 from file_handler import read_public_csv
 
 def get_tokens(data):
+    """
+    Get the tokens in the data, and the number of times they appear.
+
+    Args: 
+        list: The data to check.
+
+    Returns:
+        dict: The tokens in the data, and the number of times they appear.
+    """
+
     tokens = {}
     for sentence in data:
         for word in sentence:
