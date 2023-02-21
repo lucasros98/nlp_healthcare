@@ -45,6 +45,12 @@ The models that will be compared in our study are **KB-BERT, M-BERT, SweDeClin-B
 
 Additionally, as a simple baseline, we will implement a model that only will predict the most frequently occurring entity of each class.
 
+To convert all ipynb to py in models folder, use the following command:
+
+```bash
+    jupyter nbconvert --to script *.ipynb
+```
+
 ## Notebooks for data exploration, preprocessing and cleaning
 
 The notebooks in this folder are used for data exploration, preprocessing and cleaning the data.
