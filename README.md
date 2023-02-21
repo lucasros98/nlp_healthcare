@@ -48,7 +48,7 @@ Additionally, as a simple baseline, we will implement a model that only will pre
 To convert all ipynb to py in models folder, use the following command:
 
 ```bash
-    jupyter nbconvert --to script *.ipynb
+   jupyter nbconvert --output-dir='./model_scripts'  --to script *.ipynb
 ```
 
 ## Notebooks for data exploration, preprocessing and cleaning
