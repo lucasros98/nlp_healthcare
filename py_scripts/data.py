@@ -1,6 +1,10 @@
 import pandas as pd
-from file_handler import read_public_csv
+import sys
+import os
 
+from dotenv import find_dotenv
+sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
+from file_handler import read_public_csv
 
 def get_tokens(data):
     tokens = {}

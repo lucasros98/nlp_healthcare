@@ -5,8 +5,8 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH --gpus-per-node=T4:1
-#SBATCH --job-name=nlp_healthcare_bio_bert
-#SBATCH -o /cephyr/users/rlucas/Alvis/nlp_healthcare/outputs/BIO_BERT.out
+#SBATCH --job-name=nlp_healthcare_clinical_bert
+#SBATCH -o /cephyr/users/rlucas/Alvis/nlp_healthcare/outputs/Clinical_BERT.out
 #SBATCH -t 00:30:00
 
 # Remove any already loaded modules
@@ -16,7 +16,7 @@ module purge
 source env/bin/activate
 
 #Set file name
-NOTEBOOK=bio_bert
+NOTEBOOK=clinical_bert
 
 
 python /cephyr/users/rlucas/Alvis/nlp_healthcare/notebooks_models/model_scripts/${NOTEBOOK}.py

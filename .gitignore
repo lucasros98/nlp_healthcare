@@ -6,6 +6,7 @@
 /figures
 .env
 */__pycache__
+*/model_scripts/__pycache__
 */SweDeClin-BERT
 *.out
 /env

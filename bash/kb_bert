@@ -19,4 +19,4 @@ source env/bin/activate
 NOTEBOOK=kb_bert
 
 
-python /cephyr/users/rlucas/Alvis/nlp_healthcare/notebooks_models/${NOTEBOOK}.py
+python /cephyr/users/rlucas/Alvis/nlp_healthcare/notebooks_models/model_scripts/${NOTEBOOK}.py

@@ -18,4 +18,4 @@ source env/bin/activate
 #Set file name
 NOTEBOOK=bio_bert
 
-python /cephyr/users/rlucas/Alvis/nlp_healthcare/notebooks_models/${NOTEBOOK}.py ${SLURM_ARRAY_TASK_ID}
+python /cephyr/users/rlucas/Alvis/nlp_healthcare/notebooks_models/model_scripts/${NOTEBOOK}.py ${SLURM_ARRAY_TASK_ID}
