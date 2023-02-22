@@ -3,8 +3,11 @@ from collections import defaultdict, Counter
 import sys
 import time
 import os
+import evaluate as ev
 from torch.utils.data import Dataset, DataLoader
 import torch
+
+seqeval = ev.load('seqeval')
 
 #Base import on the path when importing vocab.py
 #The path will need to be nlp_healthcare/py_scripts/ner_util
@@ -207,8 +210,36 @@ def compare(gold, pred, stats):
                 stats['total']['corr'] += 1
                 stats[glbl]['corr'] += 1
 
+# Decodes a list of encoded labels
+def decode_labels(l_ids, vocab, max_len):
+    decoded_ids = []
+    for l_id in l_ids:
+        decoded_ids.append(vocab.itos[l_id])
+    return split_list(decoded_ids, max_len)
+
+# Splits the long list of all labels into lists separated for each sentence
+def split_list(lst, max_len):
+    result = []
+    sublist = []
+    for i, item in enumerate(lst):
+        sublist.append(item)
+        if (i+1) % max_len == 0:
+            sublist = filter_list(sublist)
+            result.append(sublist)
+            sublist = []
+    if sublist:
+        sublist = filter_list(sublist)
+        result.append(sublist)
+    return result
+
+# Removes dummy labels from list
+def filter_list(lst):
+    dummies = ['___PAD___', '___UNKNOWN___', '___BOS___', '___EOS___']
+    return list(filter(lambda a: a not in dummies, lst))
+ 
+
 # This function combines the auxiliary functions we defined above.
-def evaluate(words, predicted, gold, vocab, stats, tagging_scheme=None):
+def evaluate(words, predicted, gold, vocab, max_len, stats, predictions, references, tagging_scheme=None):
     
     pad_id = vocab.get_pad_idx()
     padding = list((words == pad_id).reshape(-1).cpu().numpy())
@@ -223,6 +254,15 @@ def evaluate(words, predicted, gold, vocab, stats, tagging_scheme=None):
     else:
         pred_flat = [l for sen in predicted for l in sen]
     pred_flat = [pad_id if is_pad else l for l, is_pad in zip(pred_flat, padding)]
+
+    # Decode encoded list of labels to the respective BIO-label.
+    gold_decoded = decode_labels(gold_cpu, vocab, max_len)
+    pred_decoded = decode_labels(pred_flat, vocab, max_len)
+
+    # Concat the labels of this batch for gold and pred
+    predictions.extend(pred_decoded)
+    references.extend(gold_decoded)
+    
     
     # Compute spans for the gold standard and prediction.
     if tagging_scheme == 'BIO':
@@ -363,6 +403,9 @@ class SequenceLabeler:
             # Evaluate on the validation set.
             stats = defaultdict(Counter)
 
+            predictions = []
+            references = []
+
             self.model.eval()
             with torch.no_grad():
                 for j, batch in enumerate(self.val_loader, 1):
@@ -374,7 +417,7 @@ class SequenceLabeler:
                     predicted = scores.argmax(dim=2)
                     
                     # Update the evaluation statistics for this batch.
-                    evaluate(batch[0], predicted, batch[1], self.label_voc, stats, tagging_scheme=self.params.tagging_scheme)
+                    evaluate(batch[0], predicted, batch[1], self.label_voc, self.params.bert_max_len, stats, predictions, references, tagging_scheme=self.params.tagging_scheme)
 
                     if self.verbose:
                         print('.', end='')
@@ -397,6 +440,11 @@ class SequenceLabeler:
            
         # After the final evaluation, we print more detailed evaluation statistics, including
         # precision, recall, and F-scores for the different types of named entities.
+
+        print("NEW EVAL SCORE")
+        results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2')
+        print(results)
+
         print()
         print('Final evaluation on the validation set:')
         p, r, f1 = prf(stats['total'])
@@ -462,6 +510,10 @@ class SequenceLabeler:
         loader = DataLoader(dataset, self.params.batch_size, shuffle=False, collate_fn=self.batcher)
                 
         stats = defaultdict(Counter)
+
+        predictions = []
+        references = []
+
         self.model.eval()
         with torch.no_grad():
             for j, batch in enumerate(loader, 1):
@@ -469,8 +521,12 @@ class SequenceLabeler:
                 scores = self.model(batch[0])                
                 predicted = scores.argmax(dim=2) 
                 
-                evaluate(batch[0], predicted, batch[1], self.label_voc, stats, tagging_scheme=self.params.tagging_scheme)
+                evaluate(batch[0], predicted, batch[1], self.label_voc, self.params.bert_max_len, stats, predictions, references, tagging_scheme=self.params.tagging_scheme)
         
+        print("NEW EVAL SCORE ON TEST SET")
+        results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2')
+        print(results)
+
         print('')
         print('Evaluation on the test set: \n')
         p, r, f1 = prf(stats['total'])
