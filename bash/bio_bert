@@ -11,6 +11,7 @@
 
 # Remove any already loaded modules
 module purge
+module load Python/3.10.8-GCCcore-12.2.0-bare
 
 #Load env
 source env/bin/activate
