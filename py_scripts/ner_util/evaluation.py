@@ -52,7 +52,7 @@ def show_entities(ner_system, sentence):
         last_token = ''
         for token, tag in zip(tokens, tags):
             # print tags
-            if last_tag in labels and not token.startswith("##"):
+            if last_tag in labels and (tag != last_tag or not token.startswith("##")):
                 output += f" </{last_tag}>"
             if tag in labels and not token.startswith("##"):
                  output += f" <{tag}>"
