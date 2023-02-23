@@ -54,13 +54,7 @@ def write_csv_file(filename, X, Y):
 
 
 def save_result_file(filename, result):
-
-    #Extract keys and values from result dictionary
-    X = list(result.keys())
-    Y = list(result.values())
-
     try:
-        result = pd.DataFrame({"X": X, "Y": Y})
         result.to_csv(os.environ.get("RESULT_DIR")+filename)
     except:
         print("Error occured while creating csv file. Please check the enviorment variable RESULT_DIR and file name.")
