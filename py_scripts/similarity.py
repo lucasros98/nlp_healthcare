@@ -31,7 +31,26 @@ def euclidean_distance(doc1, doc2):
 
     return math.sqrt(distance)
 
-#Calculate the cosine similarity between two tokenized documents (BERT embeddings)
-#The input is a pytorch tensor
-def cosine_similarity(emb1, emb2):
-    return NotImplementedError
+def jaccard_similarity(doc1, doc2):
+    """Calculate the jaccard similarity between two documents
+    If the two documents are identical, the similarity will be 1.0
+    If the two documents are completely different, the similarity will be 0.0
+    
+    Args:
+        doc1 (list): A list of tokens
+        doc2 (list): A list of tokens
+            
+    Returns:
+        float: The jaccard similarity between the two documents
+    """
+
+    #Get the union of the two documents
+    union = set(doc1).union(set(doc2))
+
+    #Get the intersection of the two documents
+    intersection = set(doc1).intersection(set(doc2))
+
+    #Calculate the jaccard similarity
+    similarity = len(intersection) / len(union)
+
+    return similarity
