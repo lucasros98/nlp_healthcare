@@ -1,6 +1,7 @@
 import random
 from collections import defaultdict, Counter    
 import sys
+import pandas as pd
 import time
 import os
 import evaluate as ev
@@ -220,21 +221,20 @@ def decode_labels(l_ids, vocab, max_len):
 # Splits the long list of all labels into lists separated for each sentence
 def split_list(lst, max_len, vocab):
     result = []
-    sublist = []
-    for i, item in enumerate(lst):
-        sublist.append(item)
-        if (i+1) % max_len == 0:
-            sublist = filter_list(sublist,vocab.dummies)
-            result.append(sublist)
-            sublist = []
-    if sublist:
-        sublist = filter_list(sublist)
+
+    for i in range(0, len(lst), max_len):
+        sublist = lst[i:i+max_len]
+
+        #Replace dummies with '0'
+        sublist = filter_list(sublist, vocab.dummies)
+
         result.append(sublist)
+
     return result
 
-# Removes dummy labels from list
+# Replace dummy labels from list
 def filter_list(lst,dummies):
-    return list(filter(lambda a: a not in dummies, lst))
+    return list(map(lambda x: 'O' if x in dummies else x, lst))
  
 
 # This function combines the auxiliary functions we defined above.
@@ -276,18 +276,25 @@ def evaluate(words, predicted, gold, vocab, stats, predictions, references, para
     compare(gold_spans, pred_spans, stats)    
 
 
-# Computes precision, recall and F-score, given a dictionary that contains
-# the counts of correct, predicted and gold-standard items.
-def prf(stats):
-    if stats['pred'] == 0:
-        return 0, 0, 0
-    p = stats['corr']/stats['pred']
-    r = stats['corr']/stats['gold']
-    if p > 0 and r > 0:
-        f = 2*p*r/(p+r)
-    else:
-        f = 0
-    return p, r, f
+#Print recision, recall and F1 score for entities
+def print_report(results):
+
+    #Extract precision, recall and F1 score from results
+    p = results["overall_precision"]
+    r = results["overall_recall"]
+    f1 = results["overall_f1"]
+
+    print()
+    print('Final evaluation report: \n')
+    print(f'Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f} \n')
+
+    report = pd.DataFrame(columns=['precision', 'recall', 'f1', 'number'])
+
+    for key, value in results.items():
+        if isinstance(value, dict):
+            report.loc[key] = results[key]
+
+    print(report)
 
 class SequenceLabeler:
     def __init__(self, params, model_factory, bert_tokenizer, verbose=True):
@@ -416,7 +423,7 @@ class SequenceLabeler:
                     predicted = scores.argmax(dim=2)
                     
                     # Update the evaluation statistics for this batch.
-                    evaluate(batch[0], predicted, batch[1], self.label_voc, self.params.bert_max_len, stats, predictions, references, tagging_scheme=self.params.tagging_scheme)
+                    evaluate(batch[0], predicted, batch[1], self.label_voc, stats, predictions, references, params=self.params)
 
                     if self.verbose:
                         print('.', end='')
@@ -426,37 +433,23 @@ class SequenceLabeler:
             if self.verbose:
                 print()
                         
-            # Compute the overall F-score for the validation set.
-            _, _, val_f1 = prf(stats['total'])
+            # Compute the overall F-score for the validation set.            
+            results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2',zero_division=1)
+            val_f1 = results["overall_f1"]
 
             self.history['val_f1'].append(val_f1)
+
             if val_f1 > best_f1:
                 best_f1 = val_f1
-                best_scores = stats
 
             t1 = time.time()
             print(f'Epoch {i+1}: train loss = {train_loss:.4f}, val f1: {val_f1:.4f}, time = {t1-t0:.4f}')
            
         # After the final evaluation, we print more detailed evaluation statistics, including
         # precision, recall, and F-scores for the different types of named entities.
+        results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2',zero_division=1)
+        print_report(results)
 
-        print("NEW EVAL SCORE")
-        results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2')
-        print(results)
-
-        print()
-        print('Final evaluation on the validation set:')
-        p, r, f1 = prf(stats['total'])
-        print(f'Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
-        for label in stats:
-            if label != 'total':
-                p, r, f1 = prf(stats[label])
-                print(f'{label:4s}: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
-
-        p, r, f1 = prf(best_scores['total'])
-        print(f'Best Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
-        
-        self.stats = stats
         return best_f1
         
     def predict(self, sentences):
@@ -521,16 +514,7 @@ class SequenceLabeler:
                 predicted = scores.argmax(dim=2) 
                 
                 evaluate(batch[0], predicted, batch[1], self.label_voc, stats, predictions, references, params=self.params)
-        
-        print("NEW EVAL SCORE ON TEST SET")
-        results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2')
-        print(results)
 
-        print('')
-        print('Evaluation on the test set: \n')
-        p, r, f1 = prf(stats['total'])
-        print(f'Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
-        for label in stats:
-            if label != 'total':
-                p, r, f1 = prf(stats[label])
-                print(f'{label:4s}: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f}')
+        #Print evalutation statistics
+        results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2',zero_division=1)
+        print_report(results)

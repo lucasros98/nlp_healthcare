@@ -41,6 +41,13 @@ class Vocabulary:
         word_freqs = Counter(w for seq in seqs for w in seq)
         word_freqs = sorted(((f, w) for w, f in word_freqs.items()), reverse=True)
 
+        #Check if B-[entity] exist, then also add the I-[entity] if it does not exist yet
+        for _, w in word_freqs:
+            if w.startswith('B-') and 'I-'+w[2:] not in [w for _, w in word_freqs]:
+                print("Adding new inside label to ",w[2:])
+                word_freqs.append((0,'I-'+w[2:]))
+                print(word_freqs)
+
         # Build the integer-to-string mapping. The vocabulary starts with the two dummy symbols,
         # and then all words, sorted by frequency. Optionally, limit the vocabulary size.
         
