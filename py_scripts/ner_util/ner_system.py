@@ -215,16 +215,16 @@ def decode_labels(l_ids, vocab, max_len):
     decoded_ids = []
     for l_id in l_ids:
         decoded_ids.append(vocab.itos[l_id])
-    return split_list(decoded_ids, max_len)
+    return split_list(decoded_ids, max_len, vocab)
 
 # Splits the long list of all labels into lists separated for each sentence
-def split_list(lst, max_len):
+def split_list(lst, max_len, vocab):
     result = []
     sublist = []
     for i, item in enumerate(lst):
         sublist.append(item)
         if (i+1) % max_len == 0:
-            sublist = filter_list(sublist)
+            sublist = filter_list(sublist,vocab.dummies)
             result.append(sublist)
             sublist = []
     if sublist:
@@ -233,13 +233,12 @@ def split_list(lst, max_len):
     return result
 
 # Removes dummy labels from list
-def filter_list(lst):
-    dummies = ['___PAD___', '___UNKNOWN___', '___BOS___', '___EOS___']
+def filter_list(lst,dummies):
     return list(filter(lambda a: a not in dummies, lst))
  
 
 # This function combines the auxiliary functions we defined above.
-def evaluate(words, predicted, gold, vocab, max_len, stats, predictions, references, tagging_scheme=None):
+def evaluate(words, predicted, gold, vocab, stats, predictions, references, params=None):
     
     pad_id = vocab.get_pad_idx()
     padding = list((words == pad_id).reshape(-1).cpu().numpy())
@@ -256,8 +255,8 @@ def evaluate(words, predicted, gold, vocab, max_len, stats, predictions, referen
     pred_flat = [pad_id if is_pad else l for l, is_pad in zip(pred_flat, padding)]
 
     # Decode encoded list of labels to the respective BIO-label.
-    gold_decoded = decode_labels(gold_cpu, vocab, max_len)
-    pred_decoded = decode_labels(pred_flat, vocab, max_len)
+    gold_decoded = decode_labels(gold_cpu, vocab, params.bert_max_len)
+    pred_decoded = decode_labels(pred_flat, vocab, params.bert_max_len)
 
     # Concat the labels of this batch for gold and pred
     predictions.extend(pred_decoded)
@@ -265,7 +264,7 @@ def evaluate(words, predicted, gold, vocab, max_len, stats, predictions, referen
     
     
     # Compute spans for the gold standard and prediction.
-    if tagging_scheme == 'BIO':
+    if params.tagging_scheme == 'BIO':
         gold_spans = to_spans_iob(gold_cpu, vocab)
         pred_spans = to_spans_iob(pred_flat, vocab)
     else:
@@ -521,7 +520,7 @@ class SequenceLabeler:
                 scores = self.model(batch[0])                
                 predicted = scores.argmax(dim=2) 
                 
-                evaluate(batch[0], predicted, batch[1], self.label_voc, self.params.bert_max_len, stats, predictions, references, tagging_scheme=self.params.tagging_scheme)
+                evaluate(batch[0], predicted, batch[1], self.label_voc, stats, predictions, references, params=self.params)
         
         print("NEW EVAL SCORE ON TEST SET")
         results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2')
