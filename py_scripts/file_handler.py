@@ -53,8 +53,21 @@ def write_csv_file(filename, X, Y):
         print("Error occured while creating csv file. Please check the enviorment variables DATA_DIR and file name.")
 
 
-def save_result_file(filename, result):
+def create_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path, exist_ok=True)
+
+def save_result_file(subfolder, filename, result):
+    if(os.environ.get("RESULT_DIR") == None):
+        print("Please set the RESULT_DIR environment variable.")
+        return
+
+    path = os.environ.get("RESULT_DIR") + subfolder + "/"
+
+    #Try to create the folder if it doesn't exist
+    create_dir(path)
+
     try:
-        result.to_csv(os.environ.get("RESULT_DIR")+filename)
+        result.to_csv(path+filename)
     except:
         print("Error occured while creating csv file. Please check the enviorment variable RESULT_DIR and file name.")
