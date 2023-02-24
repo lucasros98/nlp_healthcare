@@ -288,13 +288,17 @@ def print_report(results):
     print('Final evaluation report: \n')
     print(f'Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f} \n')
 
-    report = pd.DataFrame(columns=['precision', 'recall', 'f1', 'number'])
+    report = pd.DataFrame(columns=["entity", "precision", "recall", "f1", "number"])
 
     for key, value in results.items():
         if isinstance(value, dict):
-            report.loc[key] = results[key]
+            report = pd.concat([report, pd.DataFrame([[key, round(value["precision"], 4), round(value["recall"], 4), round(value["f1"], 4), value["number"]]], columns=["entity", "precision", "recall", "f1", "number"])], ignore_index=True)
+    report = report.sort_values(by="f1", ascending=False)
 
-    print(report)
+    #remove the index column
+    report = report.reset_index(drop=True)
+    
+    return report
 
 class SequenceLabeler:
     def __init__(self, params, model_factory, bert_tokenizer, verbose=True):
@@ -517,4 +521,6 @@ class SequenceLabeler:
 
         #Print evalutation statistics
         results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2',zero_division=1)
-        print_report(results)
+        report = print_report(results)
+
+        return report

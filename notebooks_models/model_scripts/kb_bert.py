@@ -43,7 +43,7 @@ import py_scripts.ner_util.evaluation as evaluation
 
 
 #Load data 
-X, Y = read_csv_file("clean.csv")
+X, Y = read_csv_file("clean_iob.csv")
 
 
 # ## Exploring the BERT tokenizer on clincial text
@@ -131,7 +131,7 @@ from parameters import NERParameters
 params = NERParameters()
 
 #Update the parameters if needed
-params.tagging_scheme = "IO"
+params.tagging_scheme = "BIO"
 
 
 # ## Finetuning BERT model
@@ -152,14 +152,17 @@ ner_system.fit(X_train, Y_train, X_val, Y_val)
 
 
 res = ner_system.evaluate_model(X_test,Y_test)
+print("Response: ", res)
 
 #Create a file name based on the script name and the precentage of the data used for training
 try:
-    filename = os.path.basename(__file__).split(".")[0] + "_" + str(int(precentage*100)) + ".csv"
+    name = os.path.basename(__file__).split(".")[0]
+    filename = name + "_" + str(int(precentage*100)) + ".csv"
     print("Saving results to " + filename)
-    save_result_file(filename, res)
-except:
-    print("Error occured while saving the results. Please check the sys args.")
+    save_result_file(name,filename, res)
+except Exception as e:
+    print("Error occured while saving the results.")
+    print(e)
 
 evaluation.print_examples(ner_system, 'en')
 

@@ -1,5 +1,6 @@
 import pandas as pd
 import ast
+import csv
 import os
 
 #read csv file given a path and return X and Y
@@ -55,6 +56,7 @@ def write_csv_file(filename, X, Y):
 
 def create_dir(path):
     if not os.path.exists(path):
+        print("Creating a new dir for saving results..")
         os.makedirs(path, exist_ok=True)
 
 def save_result_file(subfolder, filename, result):
@@ -67,7 +69,21 @@ def save_result_file(subfolder, filename, result):
     #Try to create the folder if it doesn't exist
     create_dir(path)
 
+    #create file path
+    filepath = path+filename
+
     try:
-        result.to_csv(path+filename)
-    except:
+        print("Saving to ", filepath)
+        if not result.empty:
+            #save to file using csv writer
+            with open(filepath, 'w') as file:
+                writer = csv.writer(file)
+                writer.writerow(["entity", "precision", "recall", "f1", "number"])
+                for index, row in result.iterrows():
+                    writer.writerow([row["entity"], row["precision"], row["recall"], row["f1"], row["number"]])
+        else:
+            print("Result is empty")
+
+    except Exception as e:
         print("Error occured while creating csv file. Please check the enviorment variable RESULT_DIR and file name.")
+        print(e)
