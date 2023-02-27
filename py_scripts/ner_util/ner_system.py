@@ -295,6 +295,12 @@ def print_report(results):
             report = pd.concat([report, pd.DataFrame([[key, round(value["precision"], 4), round(value["recall"], 4), round(value["f1"], 4), value["number"]]], columns=["entity", "precision", "recall", "f1", "number"])], ignore_index=True)
     report = report.sort_values(by="f1", ascending=False)
 
+    number_all = report["number"].sum()
+
+    #Add the overall row
+    report = pd.concat([report, pd.DataFrame([["overall", round(p, 4), round(r, 4), round(f1, 4), number_all]], columns=["entity", "precision", "recall", "f1", "number"])], ignore_index=True)
+
+
     #remove the index column
     report = report.reset_index(drop=True)
     
