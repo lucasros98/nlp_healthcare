@@ -48,6 +48,9 @@ Additionally, as a simple baseline, we will implement a model that only will pre
 To convert all ipynb to py in models folder, use the following command:
 
 ```bash
+
+    ml load IPython/8.5.0-GCCcore-11.3.0
+
    jupyter nbconvert --output-dir='./model_scripts'  --to script *.ipynb
 ```
 

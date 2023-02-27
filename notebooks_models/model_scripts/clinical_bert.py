@@ -32,6 +32,8 @@ bert_model = AutoModel.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
 #Import the file_handler
 from py_scripts.file_handler import read_csv_file,save_result_file
 
+from py_scripts.data import print_unknown_tokens, split_randomly
+
 #Import the NER system
 import py_scripts.ner_util.ner_system as ner_util
 
@@ -52,8 +54,6 @@ X, Y = read_csv_file("translated.csv")
 
 
 #Explore the tokenizer by finding all the unknown tokens in the data and printing them
-from py_scripts.data import print_unknown_tokens
-
 print_unknown_tokens(tokenizer, X)
 
 
@@ -83,8 +83,7 @@ except:
     print("Error occured while parsing the precentage from the sys args. Please check the sys args.")
     precentage = 1.0
 
-X_train = X_train[:int(len(X_train)*precentage)]
-Y_train = Y_train[:int(len(Y_train)*precentage)]
+X_train, Y_train = split_randomly(X_train, Y_train, precentage)
 
 print("Using " + str(precentage*100) + "% of the data for training.")
 
@@ -157,7 +156,6 @@ res = ner_system.evaluate_model(X_test,Y_test)
 try:
     curr_file = os.path.basename(__file__).split(".")[0]
     filename = curr_file + "_" + str(int(precentage*100)) + ".csv"
-    print("Saving results to " + filename)
     save_result_file(curr_file,filename, res)
 except:
     print("Error occured while saving the results. Please check the sys args.")
