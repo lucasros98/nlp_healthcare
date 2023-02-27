@@ -6,3 +6,12 @@
 - Fix the tagging approach (to be more accurate)?
 - Fix translation and replace abbreviations with full forms
 - Writing on the report (Theory chapter)
+
+## Done this week
+
+- Run BioBERT and Clinical BERT on the translated data set
+- Fixed the tagging (IOB2)  approach (to be more accurate)
+- Implemented seqeval for evaluation
+- Writing on the report (Theory chapter)
+- Started on evalutation
+- Implemented visualization of the results
