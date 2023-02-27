@@ -43,7 +43,7 @@ import py_scripts.ner_util.evaluation as evaluation
 
 
 #Load data 
-X, Y = read_csv_file("translated.csv")
+X, Y = read_csv_file("translated_iob.csv")
 
 
 # ## Exploring the BERT tokenizer on clincial text

@@ -160,5 +160,5 @@ def translate_from_file(filename,batch_size=64):
     return X_res,Y_res
     
 
-X,Y = translate_from_file("clean.csv")
-write_csv_file("translated",X,Y)
+X,Y = translate_from_file("clean_iob.csv")
+write_csv_file("translated_iob",X,Y)
