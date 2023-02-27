@@ -31,7 +31,7 @@ class TranslationParameters():
     num_beams=4
     early_stopping=True
     max_length=512
-    abrevs=False
+    use_decoded=False
 
 #Translate Swedish text data into English by using 
 def translate_text_to_eng(X,Y,params):
@@ -139,7 +139,7 @@ def translate_from_file(filename,batch_size=64):
     X,Y = read_csv_file(filename)
 
     #Decode clincal abbreviations
-    if params.abrevs:
+    if params.use_decoded:
        X,Y = decode_abbrevs(X,Y)
 
     X_res, Y_res = [],[]

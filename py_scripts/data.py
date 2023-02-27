@@ -1,6 +1,8 @@
 import pandas as pd
 import sys
 import os
+import random
+import numpy as np
 
 from dotenv import find_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
@@ -67,6 +69,32 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.sort_values(by=['count'], ascending=False)
         df = df.head(n)
         print(df)
+
+#The input is a list of lists, where each list is a sentence
+#data size is the percentage of the data to use
+#the data is split randomly
+def split_randomly(X,Y,data_size=1):
+    if(data_size > 1 or data_size < 0):
+        raise ValueError("Data size must be between 0 and 1")
+    
+    #Get the number of sentences
+    num_sentences = len(X)
+
+    #Get the number of sentences to use
+    num_sentences_to_use = int(num_sentences * data_size)
+
+    #Get the indices of the sentences to use
+    indices = random.sample(range(num_sentences), num_sentences_to_use)
+
+    #Get the sentences to use
+    X_new = []
+    Y_new = []
+    for i in range(len(indices)):
+        X_new.append(X[indices[i]])
+        Y_new.append(Y[indices[i]])
+
+    return X_new, Y_new
+
 
 #Replace the abbreviations in the data with the corresponding tokens
 def decode_abbrevs(X,Y):
