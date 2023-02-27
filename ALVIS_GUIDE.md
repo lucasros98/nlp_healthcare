@@ -93,9 +93,7 @@ Make sure that all allocated resources are used
 
 To run multiple jobs at once:
 
-```bash
-    sbatch --array=25,50,75,100 multi
-```
+`sbatch --array=25,50,75,100 {{model_name_script}}` 
 
 ## Job command overview
 - `sbatch`: submit batch jobs
