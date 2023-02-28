@@ -2,14 +2,20 @@ import math
 import numpy as np
 import torch
 from collections import Counter
+from data import get_training_data
+
 
 def sentence_transformer_score(sentence1, sentence2):
     from sentence_transformers import SentenceTransformer, util
 
     model = SentenceTransformer('KBLab/sentence-bert-swedish-cased')
     #Compute embedding for both lists
-    embedding_1= model.encode(sentence1, convert_to_tensor=True)
-    embedding_2 = model.encode(sentence2, convert_to_tensor=True)
+    
+    a = " ".join(sentence1)
+    b = " ".join(sentence2)
+
+    embedding_1= model.encode(a, convert_to_tensor=True)
+    embedding_2 = model.encode(b, convert_to_tensor=True)
     score_tensor = util.pytorch_cos_sim(embedding_1, embedding_2)
     return score_tensor.item()
 
@@ -94,11 +100,24 @@ def compute_cosine_similarity(docs1, docs2):
     total_scores = []
     for doc1 in docs1:
         partial_scores = []
+        # compute high, low and mean 
         for doc2 in docs2:
             partial_scores.append(sentence_transformer_score(doc1, doc2))
-        total_scores.append(partial_scores.sum())
-    print(total_scores.sum() / len(total_scores))
-      
+        total_scores.append(sum(partial_scores))
+    return(sum(total_scores) / len(docs1))
+
+
+def print_dataset_similarity_scores(metric='cosine'):
+    print("STARTING")
+    percentages = [25, 50, 75, 100]
+    for percentage in percentages:
+        print(f'Percentage: {percentage}%')
+        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage)
+        score = compute_cosine_similarity(X_test, X_train)
+        print(f'Score: {score}')
+
+print_dataset_similarity_scores()
+
 #Calculate the euclidean distance between two documents
 #A higher distance means that the two documents are more different
 def euclidean_distance(doc1, doc2):
