@@ -19,15 +19,20 @@ def read_csv(path):
         return None, None
 
 #read csv file given a filename from data folder
-def read_csv_file(filename):
+def read_csv_file(filename,subfolder=''):
+    if len(subfolder) > 0:
+        subfolder = subfolder + "/"
+
     if(os.environ.get("DATA_DIR") == None):
         print("Please set the DATA_DIR environment variable.")
         return None, None
-    return read_csv(os.environ.get("DATA_DIR") + filename)
+    
+    filepath = os.environ.get("DATA_DIR") + subfolder + filename
+    return read_csv(filepath)
 
 #read csv file given a filename from public data folder
 def read_public_csv(filename):
-    if(os.environ.get("DATA_DIR") == None):
+    if(os.environ.get("PUBLIC_DATA_DIR") == None):
         print("Please set the PUBLIC_DATA_DIR environment variable.")
         return {}
     

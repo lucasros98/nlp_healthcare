@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 
 from dotenv import find_dotenv,load_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
-from file_handler import read_public_csv
+from file_handler import read_public_csv,read_csv_file
 load_dotenv(find_dotenv())
 
 def get_tokens(data):
@@ -72,6 +72,34 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.head(n)
         print(df)
 
+def get_training_data(precentage=100,lang='swe'):
+    """Get the training data. Precentage need to be 25, 50, 75 or 100.
+    
+    Args:
+        precentage (int): The precentage of the training data to use.
+        lang (str): The language to use. (swe or eng)
+
+    Returns:
+        lists: The training data and labels. (X_train,Y_train,X_val,Y_val,X_test,Y_test)
+    """
+
+    if precentage not in [25,50,75,100]:
+        print("Precentage need to be 25, 50, 75 or 100")
+        return
+
+    if lang not in ['swe','eng']:
+        print("Language need to be 'swe' or 'eng'")
+        return
+
+    name_train = "train_" + lang + "_" + str(precentage) + ".csv"
+    name_val = "val_" + lang + ".csv"
+    name_test = "test_" + lang + ".csv"
+
+    X_train,Y_train = read_csv_file(name_train,subfolder="train")
+    X_val,Y_val = read_csv_file(name_val,subfolder="val")
+    X_test,Y_test = read_csv_file(name_test,subfolder="test")
+
+    return X_train,Y_train,X_val,Y_val,X_test,Y_test
 
 def create_data_dirs():
     """Create the data directories. (val, test, train, augmented, processed)
@@ -168,5 +196,3 @@ def decode_abbrevs(X,Y):
         Y_new.append(curr_y)
 
     return X_new, Y_new
-
-create_data_dirs()
