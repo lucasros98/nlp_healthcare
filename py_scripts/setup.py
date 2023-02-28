@@ -15,7 +15,7 @@ from preprocessing import preprocessing
 from data import create_data_dirs, split_data, split_randomly
 
 #For translation 
-from translation import translate_text_to_eng
+from translation import translate_text_to_eng_batch
 
 #puncation without - and >
 punctuation = string.punctuation.replace('-','')
@@ -50,13 +50,13 @@ write_csv_file(filename="train_swe_75",X=X_train_75,Y=Y_train_75,subfolder="trai
 
 
 #Create english data
-X_train_en, Y_train_en = translate_text_to_eng(X_train,Y_train)
-X_val_en, Y_val_en = translate_text_to_eng(X_val,Y_val)
-X_test_en, Y_test_en = translate_text_to_eng(X_test,Y_test)
+X_train_en, Y_train_en = translate_text_to_eng_batch(X_train,Y_train)
+X_val_en, Y_val_en = translate_text_to_eng_batch(X_val,Y_val)
+X_test_en, Y_test_en = translate_text_to_eng_batch(X_test,Y_test)
 
-X_train_en_25, Y_train_en_25 = translate_text_to_eng(X_train_25,Y_train_25)
-X_train_en_50, Y_train_en_50 = translate_text_to_eng(X_train_50,Y_train_50)
-X_train_en_75, Y_train_en_75 = translate_text_to_eng(X_train_75,Y_train_75)
+X_train_en_25, Y_train_en_25 = translate_text_to_eng_batch(X_train_25,Y_train_25)
+X_train_en_50, Y_train_en_50 = translate_text_to_eng_batch(X_train_50,Y_train_50)
+X_train_en_75, Y_train_en_75 = translate_text_to_eng_batch(X_train_75,Y_train_75)
 
 #Write to files
 write_csv_file(filename="train_eng_100",X=X_train_en,Y=Y_train_en,subfolder="train")

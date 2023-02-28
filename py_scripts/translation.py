@@ -127,6 +127,28 @@ def mask_entities(X,Y):
     
     return new_X, linkage
 
+def translate_text_to_eng_batch(X,Y,params=TranslationParameters(),batch_size=64):
+    #Decode clincal abbreviations
+    if params.use_decoded:
+       X,Y = decode_abbrevs(X,Y)
+
+    X_res, Y_res = [],[]
+    print("Starting to process batches...")
+    for i in tqdm(range(0,len(X),batch_size)):
+        X_batch = X[i:i+batch_size]
+        Y_batch = Y[i:i+batch_size]
+
+        #Translate the batch
+        X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch,params=params)
+
+        #Append the results
+        X_res += X_translated
+        Y_res += Y_translated
+
+    #print first 10 results 
+    print(X_res[:10])
+    return X_res,Y_res
+
 
 def translate_from_file(filename,batch_size=64):
 
