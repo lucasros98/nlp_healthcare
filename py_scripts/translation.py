@@ -34,7 +34,7 @@ class TranslationParameters():
     use_decoded=False
 
 #Translate Swedish text data into English by using 
-def translate_text_to_eng(X,Y,params):
+def translate_text_to_eng(X,Y,params=TranslationParameters()):
 
     X_masked, mapping = mask_entities(X,Y)
 
@@ -149,7 +149,7 @@ def translate_from_file(filename,batch_size=64):
         Y_batch = Y[i:i+batch_size]
 
         #Translate the batch
-        X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch,params)
+        X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch,params=params)
 
         #Append the results
         X_res += X_translated
@@ -158,7 +158,3 @@ def translate_from_file(filename,batch_size=64):
     #print first 10 results 
     print(X_res[:10])
     return X_res,Y_res
-    
-
-X,Y = translate_from_file("clean_iob.csv")
-write_csv_file("translated_iob",X,Y)
