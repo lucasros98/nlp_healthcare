@@ -91,7 +91,7 @@ def get_training_data(precentage=100,lang='swe'):
         print("Language need to be 'swe' or 'eng'")
         return
 
-    name_train = "train_" + lang + "_" + str(precentage) + ".csv"
+    name_train = "train_" + lang + "_" + str(int(precentage)) + ".csv"
     name_val = "val_" + lang + ".csv"
     name_test = "test_" + lang + ".csv"
 

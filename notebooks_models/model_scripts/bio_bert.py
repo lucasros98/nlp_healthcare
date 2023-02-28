@@ -30,9 +30,9 @@ bert_model = AutoModel.from_pretrained('dmis-lab/biobert-v1.1')
 
 
 #Import the file_handler
-from py_scripts.file_handler import read_csv_file,save_result_file
+from py_scripts.file_handler import save_result_file
 
-from py_scripts.data import print_unknown_tokens, split_randomly
+from py_scripts.data import get_training_data
 
 #Import the NER system
 import py_scripts.ner_util.ner_system as ner_util
@@ -44,47 +44,19 @@ import py_scripts.ner_util.evaluation as evaluation
 # In[ ]:
 
 
-#Load data 
-X, Y = read_csv_file("clean.csv")
-
-
-# ## Exploring the BERT tokenizer on clincial text
-
-# In[ ]:
-
-
-print_unknown_tokens(tokenizer, X)
-
-
-# ## Preparing the data
-
-# In[ ]:
-
-
-from sklearn.model_selection import train_test_split
-
-#Ratio of train, validation and test
-train_ratio = 0.8
-validation_ratio = 0.10
-test_ratio = 0.10
-
-#Random state - For reproducibility
-random_state=104
-
-#Split data into train, validation and test
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=1-train_ratio, random_state=random_state)
-X_val, X_test, Y_val, Y_test = train_test_split(X_test, Y_test, test_size=test_ratio/(test_ratio+validation_ratio), random_state=random_state)
-
-#Get the precentage of the data that should be used for training
+#Get precentage of data to use
 try:
-    precentage = float(float(sys.argv[1])/100) if len(sys.argv) > 1 and sys.argv[1] != "None" else 1.0
+    precentage = float(float(sys.argv[1])) if len(sys.argv) > 1 and sys.argv[1] != "None" else 100
 except:
-    print("Error occured while parsing the precentage from the sys args. Please check the sys args. Using 100% of data")
-    precentage = 1.0
+    precentage = 100
+    print("Error occured while parsing the precentage from the sys args. Please check the sys args. Using {}% of the data.".format(precentage))
 
-X_train, Y_train = split_randomly(X_train, Y_train, precentage)
 
-print("Using " + str(precentage*100) + "% of the data for training.")
+# In[ ]:
+
+
+#Load data 
+X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage,lang="eng")
 
 
 # In[ ]:
@@ -128,9 +100,6 @@ from parameters import NERParameters
 
 params = NERParameters()
 
-#Update the parameters if needed
-params.tagging_scheme = "BIO"
-
 
 # ## Finetuning BERT model
 
@@ -154,7 +123,7 @@ res = ner_system.evaluate_model(X_test,Y_test)
 #Create a file name based on the script name and the precentage of the data used for training
 try:
     curr_file = os.path.basename(__file__).split(".")[0]
-    filename = curr_file + "_" + str(int(precentage*100)) + ".csv"
+    filename = curr_file + "_" + str(int(precentage)) + ".csv"
     save_result_file(curr_file,filename, res)
 except:
     print("Error occured while saving the results. Please check the sys args.")
