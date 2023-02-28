@@ -46,10 +46,12 @@ def read_public_csv(filename):
     return dict
 
 #write csv file given a filename and X and Y
-def write_csv_file(filename, X, Y):
+def write_csv_file(filename, X, Y, subfolder=""):
+    if len(subfolder) > 0:
+        subfolder = subfolder + "/"
     try:
         result = pd.DataFrame({"X": X, "Y": Y})
-        result.to_csv(os.environ.get("DATA_DIR")+filename+".csv")
+        result.to_csv(os.environ.get("DATA_DIR")+subfolder+filename+".csv")
     except:
         print("Error occured while creating csv file. Please check the enviorment variables DATA_DIR and file name.")
 

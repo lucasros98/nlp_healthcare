@@ -3,10 +3,12 @@ import sys
 import os
 import random
 import numpy as np
+from sklearn.model_selection import train_test_split
 
-from dotenv import find_dotenv
+from dotenv import find_dotenv,load_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
 from file_handler import read_public_csv
+load_dotenv(find_dotenv())
 
 def get_tokens(data):
     """
@@ -70,9 +72,50 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.head(n)
         print(df)
 
-#The input is a list of lists, where each list is a sentence
-#data size is the percentage of the data to use
-#the data is split randomly
+
+def create_data_dirs():
+    """Create the data directories. (val, test, train, augmented, processed)
+    """
+    #check if the DATA_DIR environment variable is set
+    if os.environ.get("DATA_DIR") == None:
+        print("Please set the DATA_DIR environment variable.")
+        return
+
+    data_path = os.environ.get("DATA_DIR")
+
+    #Create the data directories
+    if not os.path.exists(data_path):
+        os.makedirs('data')
+    
+    if not os.path.exists(data_path + 'train'):
+        os.makedirs(data_path + 'train')
+    
+    if not os.path.exists(data_path + 'augmented'):
+        os.makedirs(data_path + 'augmented')
+
+    if not os.path.exists(data_path + 'val'):
+        os.makedirs(data_path + 'val')
+    
+    if not os.path.exists(data_path + 'test'):
+        os.makedirs(data_path + 'test')
+    
+    if not os.path.exists(data_path + 'processed'):
+        os.makedirs(data_path + 'processed')
+
+
+def split_data(X,Y,random_state=27):
+    """Split the data into train, val, and test sets."""
+
+    train_ratio = 0.80
+    validation_ratio = 0.10
+    test_ratio = 0.10
+
+    #Split data into train, validation and test
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=1-train_ratio, random_state=random_state)
+    X_validation, X_test, Y_validation, Y_test = train_test_split(X_test, Y_test, test_size=test_ratio/(test_ratio+validation_ratio), random_state=random_state)
+
+    return X_train, Y_train, X_validation, Y_validation, X_test, Y_test
+
 def split_randomly(X,Y,data_size=1):
     if(data_size > 1 or data_size < 0):
         raise ValueError("Data size must be between 0 and 1")
@@ -125,3 +168,5 @@ def decode_abbrevs(X,Y):
         Y_new.append(curr_y)
 
     return X_new, Y_new
+
+create_data_dirs()
