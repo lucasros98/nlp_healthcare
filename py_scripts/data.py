@@ -113,7 +113,7 @@ def create_data_dirs():
 
     #Create the data directories
     if not os.path.exists(data_path):
-        os.makedirs('data')
+        os.makedirs(data_path)
     
     if not os.path.exists(data_path + 'train'):
         os.makedirs(data_path + 'train')
@@ -144,7 +144,7 @@ def split_data(X,Y,random_state=27):
 
     return X_train, Y_train, X_validation, Y_validation, X_test, Y_test
 
-def split_randomly(X,Y,data_size=1):
+def split_randomly(X,Y,data_size=1.0):
     if(data_size > 1 or data_size < 0):
         raise ValueError("Data size must be between 0 and 1")
     

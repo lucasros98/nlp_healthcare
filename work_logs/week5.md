@@ -9,8 +9,8 @@
 
 ## Premilinary plan for the week
 
-- Edit the way we split up the data set sizes (mån)
-    - Split randomly, dont just split...
+- Edit the way we split up the data set sizes (mån) (DONE)
+    - Split randomly, dont just split... (DONE)
 - Implement similarity scores (tis)
     - embeddings
     - BLEU
