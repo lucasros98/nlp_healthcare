@@ -3,23 +3,60 @@ import numpy as np
 import torch
 from collections import Counter
 from data import get_training_data
+from sentence_transformers import SentenceTransformer, util
+from tqdm import tqdm
+import nltk
+import pandas as pd
+import os
+
+def convert_to_string_list(list):
+    res = []
+    for sen in list:
+        res.append(" ".join(sen))
+    return res
 
 
-def sentence_transformer_score(sentence1, sentence2):
-    from sentence_transformers import SentenceTransformer, util
-
+def calculate_cosine_similarity(docs1, docs2):
     model = SentenceTransformer('KBLab/sentence-bert-swedish-cased')
-    #Compute embedding for both lists
-    
-    a = " ".join(sentence1)
-    b = " ".join(sentence2)
 
-    embedding_1= model.encode(a, convert_to_tensor=True)
-    embedding_2 = model.encode(b, convert_to_tensor=True)
-    score_tensor = util.pytorch_cos_sim(embedding_1, embedding_2)
-    return score_tensor.item()
+    docs1 = convert_to_string_list(docs1)
+    docs2 = convert_to_string_list(docs2)
 
+    print('Encoding docs for cosine similarity')
+    embedding_1 = model.encode(docs1, convert_to_tensor=True, show_progress_bar=True, device='cuda')
+    embedding_2 = model.encode(docs2, convert_to_tensor=True, show_progress_bar=True, device='cuda')
 
+    scores = []
+    max_scores = []
+    min_scores = []
+    batch_size = 64
+    for emb1 in tqdm(embedding_1, desc='Calculate cosine similarity'):
+        temp_scores = torch.tensor([]).to('cuda')
+        temp_max_score = 0
+        temp_min_score = 1
+        for i in range(0,len(embedding_2),batch_size):
+            emb_batch = embedding_2[i:i + batch_size]
+            batch_score = util.pytorch_cos_sim(emb1, emb_batch)
+            
+            temp_scores = torch.cat((temp_scores, batch_score), dim=1)
+
+            max = batch_score.max().item()
+            min = batch_score.min().item()
+            if max > temp_max_score:
+                temp_max_score = max
+            if min < temp_min_score:
+                temp_min_score = min
+        
+        # append mean of temp_scores to scores
+        scores.append(temp_scores.mean().item())
+        # append max of temp_scores to max_scores
+        max_scores.append(temp_max_score)
+        # append min of temp_scores to min_scores
+        min_scores.append(temp_min_score)
+
+    return([np.mean(scores), np.mean(max_scores), np.mean(min_scores)])
+
+# Not used atm
 def cosine_sim_test(sentence1, sentence2):
     from sklearn.metrics.pairwise import cosine_similarity
     from transformers import AutoTokenizer, AutoModel
@@ -39,84 +76,6 @@ def cosine_sim_test(sentence1, sentence2):
         cos_sim = cosine_similarity(embeddings1.detach().numpy(), embeddings2.detach().numpy())
 
     print("KB-bert cosine sim:", cos_sim[0][0])
-
-#Calculate the BLEU score between two documents using nltk
-def bleu_score_nltk(doc1, doc2):
-    """Calculate the BLEU score between two documents using nltk
-    If the two documents are identical, the BLEU score will be 1.0
-    If the two documents are completely different, the BLEU score will be 0.0
-    
-    Args:
-        doc1 (list): A list of tokens
-        doc2 (list): A list of tokens
-            
-    Returns:
-        float: The BLEU score between the two documents
-    """
-
-    #Import the nltk library
-    import nltk
-
-    #Split sentences into list of tokens
-    doc1 = doc1.split()
-    doc2 = doc2.split()
-
-    chencherry = nltk.translate.bleu_score.SmoothingFunction()
-
-    #Calculate the BLEU score
-    score = nltk.translate.bleu_score.sentence_bleu([doc1], doc2, weights=(1, 0, 0, 0), smoothing_function=chencherry.method0)
-
-    print("BLEU Score:", score)
-
-
-def similarity_loop():
-    sentence1 = 'planeringsansvarig ssk vid inskrivning ssk Roland'
-    sentence2 = 'journalförare Per Ekström m48.5 kotkompression som ej klassificeras annorstädes'
-    cosine_sim_test(sentence1, sentence2)
-    sentence_transformer_score(sentence1, sentence2)
-    bleu_score_nltk(sentence1, sentence2)
-
-    sentence1 = 'välbefinnande säger att det är okej att ligga här'
-    sentence2 = 'välbefinnande säger att det är okej att ligga här'
-    cosine_sim_test(sentence1, sentence2)
-    sentence_transformer_score(sentence1, sentence2)
-    bleu_score_nltk(sentence1, sentence2)
-
-    sentence1 = 'välbefinnande säger att det är okej att ligga här'
-    sentence2 = 'välbefinnande säger att det inte är okej att ligga här'
-    cosine_sim_test(sentence1, sentence2)
-    sentence_transformer_score(sentence1, sentence2)
-    bleu_score_nltk(sentence1, sentence2)
-
-    sentence1 = 'jag gillar bilar'
-    sentence2 = 'jag gillar inte bilar'
-    cosine_sim_test(sentence1, sentence2)
-    sentence_transformer_score(sentence1, sentence2)
-    bleu_score_nltk(sentence1, sentence2)
-
-
-# Calculate the average cosine similarity between two lists of documents
-def compute_cosine_similarity(docs1, docs2):
-    total_scores = []
-    for doc1 in docs1:
-        partial_scores = []
-        # compute high, low and mean 
-        for doc2 in docs2:
-            partial_scores.append(sentence_transformer_score(doc1, doc2))
-        total_scores.append(sum(partial_scores))
-    return(sum(total_scores) / len(docs1))
-
-
-def print_dataset_similarity_scores(metric='cosine'):
-    print("STARTING")
-    percentages = [25, 50, 75, 100]
-    for percentage in percentages:
-        print(f'Percentage: {percentage}%')
-        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage)
-        score = compute_cosine_similarity(X_test, X_train)
-        print(f'Score: {score}')
-
-print_dataset_similarity_scores()
 
 #Calculate the euclidean distance between two documents
 #A higher distance means that the two documents are more different
@@ -146,6 +105,97 @@ def euclidean_distance(doc1, doc2):
 
     return math.sqrt(distance)
 
+
+def calculate_bleu_or_euclidean(docs1, docs2, method):
+    """Calculate the BLEU score using nltk or Euclidean distance between docs1 and docs2
+
+    If the two documents are identical, the BLEU score will be 1.0
+    If the two documents are completely different, the BLEU score will be 0.0
+    
+    Args:
+        docs1 (list): A list of a list of tokens
+        docs2 (list): A list of a list of tokens
+            
+    Returns:
+        list: The mean, Avg_max and Avg_min scores between the two documents
+    """
+    total_scores = []
+    max_scores = []
+    min_scores = []
+    for doc1 in tqdm(docs1, desc=f'Calculating {method} Score'):
+        temp_scores = []
+        temp_max_score = 0
+        temp_min_score = 1
+        for doc2 in docs2:
+            if method == 'bleu':
+                score = nltk.translate.bleu_score.sentence_bleu([doc2], doc1, weights=(1, 0, 0, 0))
+            elif method == 'euclidean':
+                score = euclidean_distance(doc1, doc2)
+            if score > temp_max_score:
+                temp_max_score = score
+            if score < temp_min_score:
+                temp_min_score = score
+            temp_scores.append(score)
+        total_scores.append(sum(temp_scores) / len(temp_scores))
+        max_scores.append(temp_max_score)
+        min_scores.append(temp_min_score)
+
+    return([np.mean(total_scores), np.mean(max_scores), np.mean(min_scores)])
+
+
+def create_dir(path):
+    if not os.path.exists(path):
+        print("Creating a new dir for saving results..")
+        os.makedirs(path, exist_ok=True)
+
+def save_result_file(subfolder, filename, result):
+    if(os.environ.get("RESULT_DIR") == None):
+        print("Please set the RESULT_DIR environment variable.")
+        return
+
+    path = os.environ.get("RESULT_DIR") + subfolder + "/"
+
+    #Try to create the folder if it doesn't exist
+    create_dir(path)
+
+    #create file path
+    filepath = path+filename
+
+    # write dataframe to csv file
+    result.to_csv(filepath, index=False)
+
+
+def print_dataset_similarity_scores(metric='all'):
+    percentages = [25, 50, 75, 100]
+    for percentage in percentages:
+        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage)
+
+        for dataset in ['test', 'val']:
+            scores = {}
+            hyp = X_val if dataset == 'val' else X_test
+            ref = X_train
+            if metric == 'cosine' or metric == 'all':
+                cos_sim_scores = calculate_cosine_similarity(hyp, ref)
+                scores['Cos_sim'] = cos_sim_scores
+            if metric == 'bleu' or metric == 'all':
+                bleu_scores = calculate_bleu_or_euclidean(hyp, ref, method='bleu')
+                scores['BLEU'] = bleu_scores
+            if metric == 'euclidean' or metric == 'all':
+                euclidean_scores = calculate_bleu_or_euclidean(hyp, ref, method='euclidean')
+                scores['Euclidean'] = euclidean_scores
+            
+            results = pd.DataFrame(columns=['Metric', 'Mean', 'Max', 'Min'])
+            for key, value in scores.items():
+                results = pd.concat([results, pd.DataFrame([[key, round(value[0], 4), round(value[1], 4), round(value[2], 4)]], columns=['Metric', 'Mean', 'Max', 'Min'])], ignore_index=True)
+
+            print(f'\nWriting scores for {percentage}% of {dataset}-dataset to file..')
+            filename = f'similarity_scores_{dataset}_data_{percentage}.csv'
+            save_result_file('similarity', filename, results)
+
+print_dataset_similarity_scores(metric='all')
+
+
+#Not used atm
 def jaccard_similarity(doc1, doc2):
     """Calculate the jaccard similarity between two documents
     If the two documents are identical, the similarity will be 1.0
