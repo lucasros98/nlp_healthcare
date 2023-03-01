@@ -31,7 +31,7 @@ def read_csv_file(filename,subfolder=''):
     return read_csv(filepath)
 
 #read csv file given a filename from public data folder
-def read_public_csv(filename):
+def read_public_csv(filename,delimiter=';'):
     if(os.environ.get("PUBLIC_DATA_DIR") == None):
         print("Please set the PUBLIC_DATA_DIR environment variable.")
         return {}
@@ -39,7 +39,7 @@ def read_public_csv(filename):
     with open(os.environ.get("PUBLIC_DATA_DIR") + filename, 'r') as file:
         dict = {}
         for line in file:
-            split = line.split(';')
+            split = line.split(delimiter)
 
             key = split[0].lower()
             value = split[1].lower()
