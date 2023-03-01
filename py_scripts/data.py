@@ -156,7 +156,7 @@ def split_data(X,Y,random_state=27):
 
     return X_train, Y_train, X_validation, Y_validation, X_test, Y_test
 
-def split_randomly(X,Y,data_size=1.0):
+def split_randomly(X,Y,data_size=1.0,random_seed=27):
     if(data_size > 1 or data_size < 0):
         raise ValueError("Data size must be between 0 and 1")
     
@@ -165,6 +165,9 @@ def split_randomly(X,Y,data_size=1.0):
 
     #Get the number of sentences to use
     num_sentences_to_use = int(num_sentences * data_size)
+
+    #Set the random seed
+    random.seed(random_seed)
 
     #Get the indices of the sentences to use
     indices = random.sample(range(num_sentences), num_sentences_to_use)
