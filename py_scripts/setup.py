@@ -67,6 +67,8 @@ write_csv_file(filename="train_swe_25_cased",X=X_train_25_cased,Y=Y_train_25_cas
 write_csv_file(filename="train_swe_50_cased",X=X_train_50_cased,Y=Y_train_50_cased,subfolder="train")
 write_csv_file(filename="train_swe_75_cased",X=X_train_75_cased,Y=Y_train_75_cased,subfolder="train")
 
+print("Creating english data...")
+
 #Create english data (uncased)
 X_train_en, Y_train_en = translate_text_to_eng_batch(X_train,Y_train)
 X_val_en, Y_val_en = translate_text_to_eng_batch(X_val,Y_val)
