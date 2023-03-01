@@ -31,6 +31,7 @@ create_data_dirs()
 write_csv_file(filename="cleaned",X=X,Y=Y,subfolder="processed")
 write_csv_file(filename="cleaned_cased",X=X_cased,Y=Y_cased,subfolder="processed")
 
+#Create all the uncased data
 #Split the data
 X_train, Y_train, X_val, Y_val, X_test, Y_test = split_data(X,Y)
 
@@ -48,8 +49,25 @@ write_csv_file(filename="train_swe_25",X=X_train_25,Y=Y_train_25,subfolder="trai
 write_csv_file(filename="train_swe_50",X=X_train_50,Y=Y_train_50,subfolder="train")
 write_csv_file(filename="train_swe_75",X=X_train_75,Y=Y_train_75,subfolder="train")
 
+#Create all the cased data
+#Split the data
+X_train_cased, Y_train_cased, X_val_cased, Y_val_cased, X_test_cased, Y_test_cased = split_data(X_cased,Y_cased)
 
-#Create english data
+write_csv_file(filename="val_swe_cased",X=X_val_cased,Y=Y_val_cased,subfolder="val")
+write_csv_file(filename="test_swe_cased",X=X_test_cased,Y=Y_test_cased,subfolder="test")
+write_csv_file(filename="train_swe_100_cased",X=X_train_cased,Y=Y_train_cased,subfolder="train")
+
+#Split the data randomly with different data sizes
+X_train_25_cased, Y_train_25_cased = split_randomly(X_train_cased,Y_train_cased,data_size=0.25)
+X_train_50_cased, Y_train_50_cased = split_randomly(X_train_cased,Y_train_cased,data_size=0.50)
+X_train_75_cased, Y_train_75_cased = split_randomly(X_train_cased,Y_train_cased,data_size=0.75)
+
+#Write to files
+write_csv_file(filename="train_swe_25_cased",X=X_train_25_cased,Y=Y_train_25_cased,subfolder="train")
+write_csv_file(filename="train_swe_50_cased",X=X_train_50_cased,Y=Y_train_50_cased,subfolder="train")
+write_csv_file(filename="train_swe_75_cased",X=X_train_75_cased,Y=Y_train_75_cased,subfolder="train")
+
+#Create english data (uncased)
 X_train_en, Y_train_en = translate_text_to_eng_batch(X_train,Y_train)
 X_val_en, Y_val_en = translate_text_to_eng_batch(X_val,Y_val)
 X_test_en, Y_test_en = translate_text_to_eng_batch(X_test,Y_test)
@@ -66,3 +84,4 @@ write_csv_file(filename="test_eng",X=X_test_en,Y=Y_test_en,subfolder="test")
 write_csv_file(filename="train_eng_25",X=X_train_en_25,Y=Y_train_en_25,subfolder="train")
 write_csv_file(filename="train_eng_50",X=X_train_en_50,Y=Y_train_en_50,subfolder="train")
 write_csv_file(filename="train_eng_75",X=X_train_en_75,Y=Y_train_en_75,subfolder="train")
+

@@ -72,7 +72,7 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.head(n)
         print(df)
 
-def get_training_data(precentage=100,lang='swe'):
+def get_training_data(precentage=100,lang='swe',uncased=True):
     """Get the training data. Precentage need to be 25, 50, 75 or 100.
     
     Args:
@@ -90,10 +90,17 @@ def get_training_data(precentage=100,lang='swe'):
     if lang not in ['swe','eng']:
         print("Language need to be 'swe' or 'eng'")
         return
+    
+    #Check if we should use cased or uncased data
+    if(uncased == True):
+        name_train = "train_" + lang + "_" + str(int(precentage)) + ".csv"
+        name_val = "val_" + lang + ".csv"
+        name_test = "test_" + lang + ".csv"
+    else:
+        name_train = "train_" + lang + "_" + str(int(precentage)) + "_cased.csv"
+        name_val = "val_" + lang + "_cased.csv"
+        name_test = "test_" + lang + "_cased.csv"
 
-    name_train = "train_" + lang + "_" + str(int(precentage)) + ".csv"
-    name_val = "val_" + lang + ".csv"
-    name_test = "test_" + lang + ".csv"
 
     X_train,Y_train = read_csv_file(name_train,subfolder="train")
     X_val,Y_val = read_csv_file(name_val,subfolder="val")
@@ -117,6 +124,11 @@ def create_data_dirs():
     
     if not os.path.exists(data_path + 'train'):
         os.makedirs(data_path + 'train')
+    
+
+    if not os.path.exists(data_path + 'train/cased'):
+        os.makedirs(data_path + 'train/cased')
+    
     
     if not os.path.exists(data_path + 'augmented'):
         os.makedirs(data_path + 'augmented')
