@@ -16,7 +16,7 @@ def run_model(params, model, tokenizer, precentage=100, lang='swe',runs=5,uncase
     X_train, Y_train, X_val, Y_val, X_test, Y_test = get_training_data(precentage,lang,uncased)
   
     #results
-    results = []
+    results = pd.DataFrame([])
 
     #Fit the model
     for i in range(runs):
@@ -34,10 +34,10 @@ def run_model(params, model, tokenizer, precentage=100, lang='swe',runs=5,uncase
         #Get the evaluation results
         result = ner_system.evaluate_model(X_test,Y_test)
 
-        #Append the results
-        results.append(result)
+        #Add the results to the list
+        results = results.append(result, ignore_index=True)
+
     
     #Average the results over each run
-    results = pd.DataFrame(results)
     results = results.mean(axis=0)
     return results
