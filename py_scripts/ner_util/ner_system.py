@@ -6,6 +6,7 @@ import time
 import os
 import evaluate as ev
 from torch.utils.data import Dataset, DataLoader
+from transformers import get_linear_schedule_with_warmup
 import torch
 
 seqeval = ev.load('seqeval')
@@ -372,6 +373,16 @@ class SequenceLabeler:
         optimizer = torch.optim.Adam(self.model.parameters(), 
                                      lr=p.learning_rate, weight_decay=p.weight_decay)
 
+        #Get the total number of steps
+        total_steps = len(self.train_loader) * p.n_epochs
+
+        # Create the learning rate scheduler.
+        if p.lr_decay:
+            scheduler = get_linear_schedule_with_warmup(optimizer, 
+                                                num_warmup_steps = p.warmup_steps,
+                                                num_training_steps = total_steps)
+
+
         # Cross-entropy loss function that we will use to optimize the model.
         # In particular, note that by using ignore_index, we will not compute the loss 
         # for the positions where we have a padding token.
@@ -401,7 +412,11 @@ class SequenceLabeler:
                 #Back propagation
                 optimizer.zero_grad()            
                 loss.backward()
+
                 optimizer.step()
+                if p.lr_decay:
+                    scheduler.step()  # decay LR
+
 
                 loss_sum += loss.item()
                 
