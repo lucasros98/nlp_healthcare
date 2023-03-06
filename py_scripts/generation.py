@@ -20,7 +20,22 @@ class LabelGenerator:
         self.addresses = []
 
         #Read data from csv files
-        self.read_data() 
+        self.read_data()
+
+    def remove_common_entities(self, list, entity):
+        for label in list:
+            if entity == 'First_Name':
+                self.first_names_women.pop(label, None)
+                self.first_names_men.pop(label, None)
+            elif entity == 'Last_Name':
+                self.last_names.pop(label, None)
+            elif entity == 'Health_Care_Unit':
+                self.healthcare_units.remove(label)
+            elif entity == 'Location':
+                self.swedish_cities.remove(label)
+                self.districts_gbg.pop(label, None)
+                self.addresses.remove(label)
+                self.countries.remove(label)
 
     def read_data(self):
         #Get last names from last_names.csv
