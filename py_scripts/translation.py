@@ -64,6 +64,38 @@ def translate_text_to_eng(X,Y,params=TranslationParameters()):
     
     return X_new, Y_new
 
+#Translate Swedish text data into English by using 
+def translate_text_to_swe(X,Y,params=TranslationParameters()):
+
+    X_masked, mapping = mask_entities(X,Y)
+
+    model_swe.to(device)
+    X_masked = tokenize_swe(X_masked, return_tensors="pt",padding=True).to(device)
+
+    X_translated = model_swe.generate(**X_masked, num_beams=params.num_beams, max_length=params.max_length, early_stopping=params.early_stopping).to("cpu")
+
+    X_translated = tokenize_swe.batch_decode(X_translated, skip_special_tokens=True)
+
+    entities = []
+    for key, value in mapping.items():
+        entities.append(value[0])
+
+    if(len(entities) != 0):
+        entities = tokenize_swe(entities, padding=True, return_tensors="pt").to(device)
+        entities = model_swe.generate(**entities, num_beams=params.num_beams, max_length=params.max_length, early_stopping=params.early_stopping).to("cpu")
+        entities = tokenize_swe.batch_decode(entities, skip_special_tokens=True)
+        
+        #Append the entities to the mapping
+        for i in range(len(entities)):
+            mapping[list(mapping.keys())[i]].append(entities[i])
+
+    #Insert the entities back into the text
+    #also create new Y for the translated text
+    X_new, Y_new = unmask_entities(X_translated, mapping)
+    
+    return X_new, Y_new
+
+
 def unmask_entities(X_translated, mapping):
     new_X = []
     new_Y = []
@@ -145,8 +177,24 @@ def translate_text_to_eng_batch(X,Y,params=TranslationParameters(),batch_size=64
         X_res += X_translated
         Y_res += Y_translated
 
-    #print first 10 results 
-    print(X_res[:10])
+    return X_res,Y_res
+
+def translate_text_to_swe_batch(X,Y,params=TranslationParameters(),batch_size=64):
+    #Decode clincal abbreviations
+
+    X_res, Y_res = [],[]
+    print("Starting to process batches...")
+    for i in tqdm(range(0,len(X),batch_size)):
+        X_batch = X[i:i+batch_size]
+        Y_batch = Y[i:i+batch_size]
+
+        #Translate the batch
+        X_translated, Y_translated = translate_text_to_swe(X_batch,Y_batch,params=params)
+
+        #Append the results
+        X_res += X_translated
+        Y_res += Y_translated
+
     return X_res,Y_res
 
 
