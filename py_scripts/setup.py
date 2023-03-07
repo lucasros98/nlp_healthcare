@@ -21,7 +21,7 @@ from translation import translate_text_to_eng_batch
 punctuation = string.punctuation.replace('-','')
 punctuation = punctuation.replace('>','')
 
-X, Y = preprocessing(IOB=True,punctuation=punctuation)
+X, Y = preprocessing(IOB=True,punctuation=punctuation,cased=False)
 X_cased, Y_cased = preprocessing(IOB=True,punctuation=punctuation,cased=True)
 
 #Create the data directories
@@ -58,11 +58,13 @@ write_csv_file(filename="test_swe_cased",X=X_test_cased,Y=Y_test_cased,subfolder
 write_csv_file(filename="train_swe_100_cased",X=X_train_cased,Y=Y_train_cased,subfolder="train")
 
 #Split the data randomly with different data sizes
+X_train_10_cased, Y_train_10_cased = split_randomly(X_train_cased,Y_train_cased,data_size=0.10)
 X_train_25_cased, Y_train_25_cased = split_randomly(X_train_cased,Y_train_cased,data_size=0.25)
 X_train_50_cased, Y_train_50_cased = split_randomly(X_train_cased,Y_train_cased,data_size=0.50)
 X_train_75_cased, Y_train_75_cased = split_randomly(X_train_cased,Y_train_cased,data_size=0.75)
 
 #Write to files
+write_csv_file(filename="train_swe_10_cased",X=X_train_10_cased,Y=Y_train_10_cased,subfolder="train")
 write_csv_file(filename="train_swe_25_cased",X=X_train_25_cased,Y=Y_train_25_cased,subfolder="train")
 write_csv_file(filename="train_swe_50_cased",X=X_train_50_cased,Y=Y_train_50_cased,subfolder="train")
 write_csv_file(filename="train_swe_75_cased",X=X_train_75_cased,Y=Y_train_75_cased,subfolder="train")
@@ -70,20 +72,20 @@ write_csv_file(filename="train_swe_75_cased",X=X_train_75_cased,Y=Y_train_75_cas
 print("Creating english data...")
 
 #Create english data (uncased)
-X_train_en, Y_train_en = translate_text_to_eng_batch(X_train,Y_train)
-X_val_en, Y_val_en = translate_text_to_eng_batch(X_val,Y_val)
-X_test_en, Y_test_en = translate_text_to_eng_batch(X_test,Y_test)
+X_train_en, Y_train_en = translate_text_to_eng_batch(X_train_cased,Y_train_cased)
+X_val_en, Y_val_en = translate_text_to_eng_batch(X_val_cased,Y_val_cased)
+X_test_en, Y_test_en = translate_text_to_eng_batch(X_test_cased,Y_test_cased)
 
-X_train_en_25, Y_train_en_25 = translate_text_to_eng_batch(X_train_25,Y_train_25)
-X_train_en_50, Y_train_en_50 = translate_text_to_eng_batch(X_train_50,Y_train_50)
-X_train_en_75, Y_train_en_75 = translate_text_to_eng_batch(X_train_75,Y_train_75)
+X_train_en_25, Y_train_en_25 = translate_text_to_eng_batch(X_train_25_cased,Y_train_25_cased)
+X_train_en_50, Y_train_en_50 = translate_text_to_eng_batch(X_train_50_cased,Y_train_50_cased)
+X_train_en_75, Y_train_en_75 = translate_text_to_eng_batch(X_train_75_cased,Y_train_75_cased)
 
 #Write to files
-write_csv_file(filename="train_eng_100",X=X_train_en,Y=Y_train_en,subfolder="train")
-write_csv_file(filename="val_eng",X=X_val_en,Y=Y_val_en,subfolder="val")
-write_csv_file(filename="test_eng",X=X_test_en,Y=Y_test_en,subfolder="test")
+write_csv_file(filename="train_eng_100_cased",X=X_train_en,Y=Y_train_en,subfolder="train")
+write_csv_file(filename="val_eng_cased",X=X_val_en,Y=Y_val_en,subfolder="val")
+write_csv_file(filename="test_eng_cased",X=X_test_en,Y=Y_test_en,subfolder="test")
 
-write_csv_file(filename="train_eng_25",X=X_train_en_25,Y=Y_train_en_25,subfolder="train")
-write_csv_file(filename="train_eng_50",X=X_train_en_50,Y=Y_train_en_50,subfolder="train")
-write_csv_file(filename="train_eng_75",X=X_train_en_75,Y=Y_train_en_75,subfolder="train")
+write_csv_file(filename="train_eng_25_cased",X=X_train_en_25,Y=Y_train_en_25,subfolder="train")
+write_csv_file(filename="train_eng_50_cased",X=X_train_en_50,Y=Y_train_en_50,subfolder="train")
+write_csv_file(filename="train_eng_75_cased",X=X_train_en_75,Y=Y_train_en_75,subfolder="train")
 

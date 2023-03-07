@@ -56,8 +56,7 @@ except:
 
 
 #Load data 
-X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage)
-
+X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage,uncased=False)
 
 # In[ ]:
 

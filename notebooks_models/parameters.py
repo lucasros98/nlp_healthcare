@@ -12,12 +12,18 @@ class NERParameters():
     tagging_scheme="BIO"
     
     #Training parameters
-    n_epochs = 3
-    batch_size = 32 
-    learning_rate = 0.0001
-    weight_decay = 0
+    n_epochs = 4
+    batch_size = 32
+
+    learning_rate = 1e-4
+    epsilon = 1e-08
+    weight_decay = 0.0
+
+    #For linear learning rate decay
+    lr_decay = False
+    warmup_steps = 0
 
     # Word dropout rate.
-    word_dropout_prob = 0.0
+    word_dropout_prob = 0
 
     bert_max_len = 512

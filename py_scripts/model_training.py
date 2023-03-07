@@ -23,10 +23,13 @@ def run_model(params, model, tokenizer, precentage=100, lang='swe',runs=5,uncase
         print("Run: ", i)
 
         #Update the seed
-        params["random_seed"] = i
+        params.random_seed = i
+
+        #Copy the model
+        curr_model = model.copy()
 
         #Create a new instance of the model
-        ner_system = ner_util.SequenceLabeler(params, model, bert_tokenizer=tokenizer)
+        ner_system = ner_util.SequenceLabeler(params, curr_model, bert_tokenizer=tokenizer)
         
         #Fit the model
         ner_system.fit(X_train, Y_train, X_val, Y_val)
