@@ -14,6 +14,7 @@ class LabelGenerator:
         self.last_names = {}
         self.first_names_men = {}
         self.first_names_women = {}
+        self.first_names_neutral = []
         self.healthcare_units = []
         self.swedish_cities = []
         self.districts_gbg = {}
@@ -28,7 +29,21 @@ class LabelGenerator:
         #Read data from csv files
         self.read_data()
 
+        #Initiate first_names_neutral
+        for name in self.first_names_men:
+            if name in self.first_names_women:
+                self.first_names_neutral.append(name)
 
+    def get_gender_of_first_name(self, first_name):
+        if first_name in self.first_names_neutral:
+            return None
+        elif first_name in self.first_names_men:
+            return 'man'
+        elif first_name in self.first_names_women:
+            return 'woman'
+        else:
+            return None
+        
     def get_blacklist(self,entity):
         if entity not in self.blacklist:
             return []
@@ -64,7 +79,7 @@ class LabelGenerator:
             for line in file:
                 name = line.split(';')[0].capitalize()
                 number = int(line.split(';')[1])
-                if(number > 100):
+                if(number > 300):
                     self.last_names[name] = number
 
         #Get first names from first_names_men.csv
@@ -73,7 +88,7 @@ class LabelGenerator:
             for line in file:
                 name = line.split(';')[0].capitalize()
                 number = int(line.split(';')[1])
-                if(number > 100):
+                if(number > 500):
                     self.first_names_men[name] = number
         
         file_name = os.getenv('PUBLIC_DATA_DIR') + '/first_names_women.csv'
@@ -81,7 +96,7 @@ class LabelGenerator:
             for line in file:
                 name = line.split(';')[0].capitalize()
                 number = int(line.split(';')[1])
-                if(number > 100):
+                if(number > 500):
                     self.first_names_women[name] = number
 
         file_name = os.getenv('PUBLIC_DATA_DIR') + '/gbg_districts.csv'
