@@ -21,8 +21,18 @@ class LabelGenerator:
         self.addresses = []
         self.synonyms = {}
 
+        #Blacklisted entities (entities not allowed to be generated)
+        self.blacklist = {}
+
         #Read data from csv files
         self.read_data()
+
+
+    def get_blacklist(self,entity):
+        if entity not in self.blacklist:
+            return []
+        else:
+            return self.blacklist[entity]
 
     def remove_common_entities(self, list, entity):
         for label in list:
@@ -38,6 +48,9 @@ class LabelGenerator:
                 self.districts_gbg.pop(label, None)
                 self.addresses.remove(label)
                 self.countries.remove(label)
+            else:
+                #Use blacklist for other entities
+                self.blacklist[entity].append(label)
 
     def read_data(self):
         #Get last names from last_names.csv
@@ -99,6 +112,7 @@ class LabelGenerator:
             self.synonyms = json.load(file)
 
     def generate_date(self,dateformat="%Y%m%d"):
+        blacklisted_dates = self.get_blacklist('Date')
 
         #Generate a random date
         start_date = dt.date(2007, 1, 1)
@@ -109,6 +123,14 @@ class LabelGenerator:
 
         random_number_of_days = random.randrange(days_between_dates)
         random_date = start_date + dt.timedelta(days=random_number_of_days)
+
+        #Check if date is blacklisted
+        max_tries = 100
+        while random_date.strftime(dateformat) in blacklisted_dates and max_tries > 0:
+            random_number_of_days = random.randrange(days_between_dates)
+            random_date = start_date + dt.timedelta(days=random_number_of_days)
+            max_tries -= 1
+
         return random_date.strftime(dateformat)
 
     def generate_datepart(self, dateformat="%d/%m"):
@@ -133,6 +155,8 @@ class LabelGenerator:
         return random.choices(self.healthcare_units, k=1)[0]
 
     def generate_phonenumber(self):
+        blacklisted_phonenumbers = self.get_blacklist('PhoneNumber')
+
         type = random.choices(["home", "mobile"], weights=[1,2], k=1)[0]
         if type == "home":
             start = "0"
