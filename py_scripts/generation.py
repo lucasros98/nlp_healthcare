@@ -23,6 +23,7 @@ class LabelGenerator:
 
         #Blacklisted entities (entities not allowed to be generated)
         self.blacklist = {}
+        self.max_tries = 100
 
         #Read data from csv files
         self.read_data()
@@ -35,6 +36,9 @@ class LabelGenerator:
             return self.blacklist[entity]
 
     def remove_common_entities(self, list, entity):
+        #Use blacklist for other entities
+        self.blacklist[entity] = list
+
         for label in list:
             if entity == 'First_Name':
                 self.first_names_women.pop(label, None)
@@ -48,9 +52,6 @@ class LabelGenerator:
                 self.districts_gbg.pop(label, None)
                 self.addresses.remove(label)
                 self.countries.remove(label)
-            else:
-                #Use blacklist for other entities
-                self.blacklist[entity].append(label)
 
     def read_data(self):
         #Get last names from last_names.csv
@@ -111,6 +112,26 @@ class LabelGenerator:
         with open(file_name, 'r') as file:
             self.synonyms = json.load(file)
 
+    def generate_random_entity(self, entity,params={}):
+        if entity == 'First_Name':
+            return self.generate_firstname(gender=params['gender'])
+        elif entity == 'Last_Name':
+            return self.generate_lastname()
+        elif entity == 'Health_Care_Unit':
+            return self.generate_healthcare_unit()
+        elif entity == 'Location':
+            return self.generate_location()
+        elif entity == 'Full_Date':
+            return self.generate_date()
+        elif entity == 'Date_Part':
+            return self.generate_datepart()
+        elif entity == 'Age':
+            return self.generate_age()
+        elif entity == 'Phone_Number':
+            return self.generate_phonenumber()
+        else:
+            return None
+    
     def generate_date(self,dateformat="%Y%m%d"):
         blacklisted_dates = self.get_blacklist('Date')
 
@@ -125,7 +146,7 @@ class LabelGenerator:
         random_date = start_date + dt.timedelta(days=random_number_of_days)
 
         #Check if date is blacklisted
-        max_tries = 100
+        max_tries = self.max_tries
         while random_date.strftime(dateformat) in blacklisted_dates and max_tries > 0:
             random_number_of_days = random.randrange(days_between_dates)
             random_date = start_date + dt.timedelta(days=random_number_of_days)
@@ -136,10 +157,10 @@ class LabelGenerator:
     def generate_datepart(self, dateformat="%d/%m"):
         return self.generate_date(dateformat)
 
-    def generate_firstname(self,type=None):
-        if type == "man":
+    def generate_firstname(self,gender=None):
+        if gender == "man":
             return random.choices(list(self.first_names_men.keys()), weights=list(self.first_names_men.values()), k=1)[0]
-        elif type == "woman":
+        elif gender == "woman":
             return random.choices(list(self.first_names_women.keys()), weights=list(self.first_names_women.values()), k=1)[0]
         else:
             #Generate a number, if > 0.5 -> man, else woman
@@ -154,13 +175,12 @@ class LabelGenerator:
     def generate_healthcareunit(self):
         return random.choices(self.healthcare_units, k=1)[0]
 
-    def generate_phonenumber(self):
-        blacklisted_phonenumbers = self.get_blacklist('PhoneNumber')
-
+    def generate_number(self):
         type = random.choices(["home", "mobile"], weights=[1,2], k=1)[0]
         if type == "home":
             start = "0"
             end = str(random.randint(1,9)) + str(random.randint(100,999)) + str(random.randint(100,999))
+
             return start + end
         elif type == "mobile":
             if random.random() > 0.5:
@@ -171,6 +191,20 @@ class LabelGenerator:
                 end = str(random.randint(1000,9999)) + str(random.randint(1000,9999))
 
             return start + end
+
+    def generate_phonenumber(self):
+        blacklisted_phonenumbers = self.get_blacklist('Phone_Number')
+
+        #Generate a random phonenumber
+        number = self.generate_number()
+
+        max_tries = self.max_tries
+        while number in blacklisted_phonenumbers and max_tries > 0:
+            number = self.generate_number()
+            max_tries -= 1
+
+        return number
+        
         
     def generate_age(self,contains_string=True):
         age = random.randint(16,99)
