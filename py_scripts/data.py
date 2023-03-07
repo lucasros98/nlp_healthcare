@@ -7,7 +7,8 @@ from sklearn.model_selection import train_test_split
 
 from dotenv import find_dotenv,load_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
-from file_handler import read_public_csv,read_csv_file
+from file_handler import read_public_csv,read_csv_file,write_csv_file
+from generation import LabelGenerator
 load_dotenv(find_dotenv())
 
 def get_tokens(data):
@@ -72,7 +73,7 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.head(n)
         print(df)
 
-def get_training_data(precentage=100,lang='swe',uncased=True):
+def get_training_data(precentage=100,lang='swe',uncased=True,unique_test=False):
     """Get the training data. Precentage need to be 25, 50, 75 or 100.
     
     Args:
@@ -95,11 +96,11 @@ def get_training_data(precentage=100,lang='swe',uncased=True):
     if(uncased == True):
         name_train = "train_" + lang + "_" + str(int(precentage)) + ".csv"
         name_val = "val_" + lang + ".csv"
-        name_test = "test_" + lang + ".csv"
+        name_test = "test_" + lang + ("_unique" if unique_test else "") + ".csv"
     else:
         name_train = "train_" + lang + "_" + str(int(precentage)) + "_cased.csv"
         name_val = "val_" + lang + "_cased.csv"
-        name_test = "test_" + lang + "_cased.csv"
+        name_test = "test_" + lang + "_cased" + ("_unique" if unique_test else "") + ".csv"
 
 
     X_train,Y_train = read_csv_file(name_train,subfolder="train")
@@ -142,6 +143,152 @@ def create_data_dirs():
     if not os.path.exists(data_path + 'processed'):
         os.makedirs(data_path + 'processed')
 
+def generate_unique_test_data(uncased=True):
+
+    #Get the test and training data
+    if uncased:
+        X_train,Y_train = read_csv_file("train_swe_100.csv",subfolder="train")
+        X_test,Y_test = read_csv_file("test_swe.csv",subfolder="test")
+    else:
+        X_train,Y_train = read_csv_file("train_swe_100_cased.csv",subfolder="train")
+        X_test,Y_test = read_csv_file("test_swe_cased.csv",subfolder="test")
+
+    #Create blacklist for entities from training data
+    black_list = {}
+    for i in range(len(Y_train)):
+        doc = Y_train[i]
+        inside_entity = False
+        for j in range(len(doc)):
+            #Check if start of entity
+            if Y_train[i][j] == 'O':
+                if inside_entity:
+                    if entity in black_list:
+                        black_list[entity].append(label_string)
+                    else:
+                        black_list[entity] = [label_string]
+                    inside_entity = False
+            
+            elif Y_train[i][j][:2] == 'B-':
+                #Check if we are already inside an entity -> then close the current entity
+                if inside_entity:
+                    if entity in black_list:
+                        black_list[entity].append(label_string)
+                    else:
+                        black_list[entity] = [label_string]
+                
+                inside_entity = True
+                entity = Y_train[i][j][2:]
+                label_string = X_train[i][j]
+
+            elif Y_train[i][j][:2] == 'I-':
+                label_string = label_string + " " + X_train[i][j]
+    
+            #Check if end of document and we are inside an entity
+            if j == len(doc)-1 and inside_entity:
+                if entity in black_list:
+                    black_list[entity].append(label_string)
+                else:
+                    black_list[entity] = [label_string]
+                inside_entity = False
+                label_string = ""
+
+    #Create the label generator and set the blacklist
+    label_gen = LabelGenerator()
+    for key in black_list:
+        black_list[key] = list(set(black_list[key]))
+        label_gen.remove_common_entities(black_list[key],key)
+    
+    X_new = []
+    Y_new = []
+    #Update the test data to only have unique entities
+    for i in range(len(Y_test)):
+        doc = Y_test[i]
+        inside_entity = False
+        label_string = ""
+        
+        x_curr= []
+        y_curr = []
+        
+        for j in range(len(doc)):
+            #Check if start of entity (start with B-)
+            if Y_test[i][j][:2] == 'B-':
+                #Check if currently inside an entity -> then close the current entity
+                if inside_entity and label_string in black_list[entity]:
+                    #Generate new label
+                    new_label = label_gen.generate_random_entity(entity)
+                    splitted = new_label.split(" ")
+                    for k in range(len(splitted)):
+                        if k == 0:
+                            y_curr.append("B-" + entity)
+                        else:
+                            y_curr.append("I-" + entity)
+                        
+                        if uncased:
+                            x_curr.append(splitted[k].lower())
+                        else:
+                            x_curr.append(splitted[k])
+                    
+                #Add the current entity to the blacklist
+                inside_entity = True
+                entity = Y_test[i][j][2:]
+                label_string = X_test[i][j]
+
+            elif Y_test[i][j][:2] == 'I-':
+                label_string = label_string + " " + X_test[i][j]
+            else:
+                if inside_entity:
+                    if label_string in black_list[entity]:
+                        #Generate new label
+                        label_string = label_gen.generate_random_entity(entity)
+              
+                    splitted = label_string.split(" ")
+                    for k in range(len(splitted)):
+                        if k == 0:
+                            y_curr.append("B-" + entity)
+                        else:
+                            y_curr.append("I-" + entity)
+                        
+                        if uncased:
+                            x_curr.append(splitted[k].lower())
+                        else:
+                            x_curr.append(splitted[k])
+
+                    inside_entity = False
+                    label_string = ""
+
+                else:
+                    y_curr.append(Y_test[i][j])
+                    x_curr.append(X_test[i][j])
+            
+            #Check if end of document and we are inside an entity
+            if j == len(doc)-1 and inside_entity:
+                if label_string in black_list[entity]:
+                    #Generate new label
+                    label_string = label_gen.generate_random_entity(entity)
+                
+                splitted = label_string.split(" ")
+                for k in range(len(splitted)):
+                    if k == 0:
+                        y_curr.append("B-" + entity)
+                    else:
+                        y_curr.append("I-" + entity)
+                    
+                    if uncased:
+                        x_curr.append(splitted[k].lower())
+                    else:
+                        x_curr.append(splitted[k])
+                inside_entity = False
+                label_string = ""
+
+        X_new.append(x_curr)
+        Y_new.append(y_curr)
+
+                
+    #Save the new test data
+    if uncased:
+        write_csv_file("test_swe_unique",X_new,Y_new,subfolder="test")
+    else:
+        write_csv_file("test_swe_cased_unique",X_new,Y_new,subfolder="test")
 
 def split_data(X,Y,random_state=27):
     """Split the data into train, val, and test sets."""

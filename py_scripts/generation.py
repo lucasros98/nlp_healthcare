@@ -46,12 +46,16 @@ class LabelGenerator:
             elif entity == 'Last_Name':
                 self.last_names.pop(label, None)
             elif entity == 'Health_Care_Unit':
-                self.healthcare_units.remove(label)
+                if label in self.healthcare_units:
+                    self.healthcare_units.remove(label)
             elif entity == 'Location':
-                self.swedish_cities.remove(label)
+                if label in self.swedish_cities:
+                    self.swedish_cities.remove(label)
                 self.districts_gbg.pop(label, None)
-                self.addresses.remove(label)
-                self.countries.remove(label)
+                if label in self.addresses:
+                    self.addresses.remove(label)
+                if label in self.countries:
+                    self.countries.remove(label)
 
     def read_data(self):
         #Get last names from last_names.csv
@@ -112,9 +116,12 @@ class LabelGenerator:
         with open(file_name, 'r') as file:
             self.synonyms = json.load(file)
 
-    def generate_random_entity(self, entity,params={}):
+    def generate_random_entity(self, entity,params={"gender":None}):
         if entity == 'First_Name':
-            return self.generate_firstname(gender=params['gender'])
+            if params['gender']:
+                return self.generate_firstname(gender=params['gender'])
+            else: 
+                return self.generate_firstname()
         elif entity == 'Last_Name':
             return self.generate_lastname()
         elif entity == 'Health_Care_Unit':
@@ -172,7 +179,7 @@ class LabelGenerator:
     def generate_lastname(self):
         return random.choices(list(self.last_names.keys()), weights=list(self.last_names.values()), k=1)[0]
         
-    def generate_healthcareunit(self):
+    def generate_healthcare_unit(self):
         return random.choices(self.healthcare_units, k=1)[0]
 
     def generate_number(self):
