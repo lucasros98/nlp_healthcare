@@ -256,9 +256,8 @@ def generate_unique_test_data(uncased=True):
                     inside_entity = False
                     label_string = ""
 
-                else:
-                    y_curr.append(Y_test[i][j])
-                    x_curr.append(X_test[i][j])
+                y_curr.append(Y_test[i][j])
+                x_curr.append(X_test[i][j])
             
             #Check if end of document and we are inside an entity
             if j == len(doc)-1 and inside_entity:
