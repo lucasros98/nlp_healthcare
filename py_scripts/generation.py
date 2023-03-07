@@ -3,6 +3,7 @@ import datetime as dt
 import os
 from dotenv import load_dotenv, find_dotenv
 import sys
+import json
 
 sys.path.append(os.path.dirname(find_dotenv()))
 load_dotenv(find_dotenv())
@@ -18,6 +19,7 @@ class LabelGenerator:
         self.districts_gbg = {}
         self.countries = []
         self.addresses = []
+        self.synonyms = {}
 
         #Read data from csv files
         self.read_data()
@@ -91,6 +93,10 @@ class LabelGenerator:
             for line in file:
                 name = line.split(',')[0].capitalize()
                 self.countries.append(name)
+        
+        file_name = os.getenv('PUBLIC_DATA_DIR') + '/synonyms.json'
+        with open(file_name, 'r') as file:
+            self.synonyms = json.load(file)
 
     def generate_date(self,dateformat="%Y%m%d"):
 
@@ -174,3 +180,10 @@ class LabelGenerator:
             return self.generate_address()
         else:
             return self.generate_country()
+
+    def generate_synonym(self, word):
+        chosen_synonym = word
+        for syn in self.synonyms:
+            if syn['word'] == word:
+                chosen_synonym = random.choices(syn['synonyms'], k=1)[0]
+        return chosen_synonym
