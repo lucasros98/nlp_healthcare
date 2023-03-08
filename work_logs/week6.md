@@ -42,9 +42,17 @@
     - Vad hände? Taggade den rätt? När den översatte, vad taggade då? 
     - Komplettera plottarna
 
+____________________________________________________________________________________________________________________
+
 ## Premilinary plan for the week
 
-- Ta fram en ny test-dataset med endast unika entiteter, delvis baserat på Sahlgrenskas data, SCB-statistik osv.
-  - Sedan träna om modellerna och jämför med det tidigare resultaten - Hur presterar modellerna på unika entities?
-- Börja med data augmentation och implementera back translation.
+- Ta fram en ny test-dataset med endast unika entiteter, delvis baserat på Sahlgrenskas data, SCB-statistik osv. (Done)
+  - Sedan träna om modellerna och jämför med det tidigare resultaten - Hur presterar modellerna på unika entities? (Done) - Presterar sämre
+- Börja med data augmentation och implementera back translation. (Done)
 - Skapa graf över olika similarity metrics för datan och augmentation techniques.
+  
+- Andra saker att implementera:
+  - Early stopping
+  - Bevara andel labels i varje split
+  - Titta på preprocessing stegen och se om det finns några andra steg som kan förbättra resultatet
+  - Print funktion för att se vad modellen taggar
