@@ -3,6 +3,7 @@ from collections import defaultdict, Counter
 import sys
 import pandas as pd
 import time
+import copy
 import os
 import evaluate as ev
 from torch.utils.data import Dataset, DataLoader
@@ -286,7 +287,7 @@ def print_report(results):
     f1 = results["overall_f1"]
 
     print()
-    print('Final evaluation report: \n')
+    print('Evaluation report: \n')
     print(f'Overall: P = {p:.4f}, R = {r:.4f}, F1 = {f1:.4f} \n')
 
     report = pd.DataFrame(columns=["entity", "precision", "recall", "f1", "number"])
@@ -301,10 +302,12 @@ def print_report(results):
     #Add the overall row
     report = pd.concat([report, pd.DataFrame([["overall", round(p, 4), round(r, 4), round(f1, 4), number_all]], columns=["entity", "precision", "recall", "f1", "number"])], ignore_index=True)
 
-
     #remove the index column
     report = report.reset_index(drop=True)
     
+    #print the report
+    print(report)
+
     return report
 
 class SequenceLabeler:
@@ -389,8 +392,10 @@ class SequenceLabeler:
         loss_func = torch.nn.CrossEntropyLoss(ignore_index=self.label_voc.get_pad_idx())
         
         self.history = defaultdict(list)
-        best_f1 = -1  
-        best_scores = None      
+        best_f1 = -1 
+
+        #We store the best model for early stopping
+        model_state = None
             
         for i in range(p.n_epochs):
 
@@ -427,7 +432,8 @@ class SequenceLabeler:
                         print(f' ({j})')               
             if self.verbose:
                 print()
-                
+
+            # Compute the training loss. 
             train_loss = loss_sum / len(self.train_loader)
             self.history['train_loss'].append(train_loss)
             
@@ -438,6 +444,9 @@ class SequenceLabeler:
             references = []
 
             self.model.eval()
+
+            val_loss_sum = 0
+
             with torch.no_grad():
                 for j, batch in enumerate(self.val_loader, 1):
                     
@@ -446,6 +455,10 @@ class SequenceLabeler:
                     
                     # Compute the highest-scoring labels at each word position.
                     predicted = scores.argmax(dim=2)
+
+                    # Compute the validation loss.
+                    loss = loss_func(scores.view(-1, len(self.label_voc)), batch[1].view(-1))
+                    val_loss_sum += loss.item()
                     
                     # Update the evaluation statistics for this batch.
                     evaluate(batch[0], predicted, batch[1], self.label_voc, stats, predictions, references, params=self.params)
@@ -457,7 +470,11 @@ class SequenceLabeler:
                             print(f' ({j})')
             if self.verbose:
                 print()
-                        
+
+            # Compute the overall loss for the validation set.
+            val_loss = val_loss_sum / len(self.val_loader)
+            self.history['val_loss'].append(val_loss)
+   
             # Compute the overall F-score for the validation set.            
             results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2',zero_division=1)
             val_f1 = results["overall_f1"]
@@ -467,15 +484,32 @@ class SequenceLabeler:
             if val_f1 > best_f1:
                 best_f1 = val_f1
 
+                #Save the model state if early stopping
+                if p.early_stopping:
+                    model_state = copy.deepcopy(self.model.state_dict())
+
             t1 = time.time()
-            print(f'Epoch {i+1}: train loss = {train_loss:.4f}, val f1: {val_f1:.4f}, time = {t1-t0:.4f}')
-           
+            print(f'Epoch {i+1}: train loss = {train_loss:.4f}, val loss = {val_loss:.4f}, val f1: {val_f1:.4f}, time = {t1-t0:.4f}')
+
+            # If we have not improve the validation loss over 2 epochs, we stop the training.
+            # We also restore the previously best model state
+            if p.early_stopping and i > 2:
+                if self.history['val_loss'][-1] > self.history['val_loss'][-2] and self.history['val_loss'][-1] > self.history['val_loss'][-3]:
+                    print('Early stopping!')
+                    self.model.load_state_dict(model_state)
+                    break
+
+
+        #Calculate the number of training steps
+        total_steps = len(self.train_loader) * (i + 1)
+        print("Total training steps: {}".format(total_steps))
+
         # After the final evaluation, we print more detailed evaluation statistics, including
         # precision, recall, and F-scores for the different types of named entities.
         results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2',zero_division=1)
         print_report(results)
 
-        return best_f1
+        return self.history
         
     def predict(self, sentences):
         # This method applies the trained model to a list of sentences.

@@ -12,12 +12,15 @@ class NERParameters():
     tagging_scheme="BIO"
     
     #Training parameters
-    n_epochs = 4
+    n_epochs = 15
     batch_size = 32
 
     learning_rate = 1e-4
     epsilon = 1e-08
     weight_decay = 0.0
+
+    #Early stopping parameters
+    early_stopping = True
 
     #For linear learning rate decay
     lr_decay = False
