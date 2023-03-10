@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
 plt.style.use('seaborn')
 
+# Fictional examples
 text_examples_sv = [
     'ssk Lisa försöker att få tag i BIB Jonas Berg. Vid behov, informera pat fru när plats finns ledig på Sophiahemmet. Förhoppningsvis innan 20230221',
-    'Åtgärd	Dietist hör av sig och kommer boka om tiden till 12/7 kl 14. Besök kommer ske på avd 314',
-    'Besöksorsak	Kontakt med dr Kayed, tel nr 0711442373. Pat är 82 år, längd 175 cm och mår illa efter måltider.',
+    'Dietist hör av sig och kommer boka om tiden till 12/7 kl 14. Besök kommer ske på avd 314',
+    'Kontakt med dr Kayed, tel nr 0711442373. Pat är 82 år, längd 175 cm och mår illa efter måltider.',
 ]
 text_examples_en = [
     "ssk Lisa tries to get hold of BIB Jonas Berg. If necessary, inform the pat wife when the place is available at Sophiahemmet. Hopefully before 20230221",
@@ -38,7 +39,7 @@ def show_entities(ner_system, sentence):
     for tokens, tags in zip(sentence, tagged_sentence):
         output = ''
         for token, tag in zip(tokens, tags):
-            if tag in labels:
+            if tag[2:] in labels:
                 output += f"<{tag}> {token} </{tag}> "
             else:
                 output += f"{token} "
@@ -51,14 +52,14 @@ def show_entities(ner_system, sentence):
         last_token = ''
         for token, tag in zip(tokens, tags):
             # print tags
-            if last_tag in labels and (tag != last_tag or not token.startswith("##")):
+            if last_tag[2:] in labels and (tag != last_tag or not token.startswith("##")):
                 output += f" </{last_tag}>"
-            if tag in labels and not token.startswith("##"):
+            if tag[2:] in labels and not token.startswith("##"):
                  output += f" <{tag}>"
 
             # print tokens
             if token.startswith("##"):
-                output += f"{token}"
+                output += f"{token[2:]}"
             else:
                 output += f" {token}"
 
@@ -67,7 +68,7 @@ def show_entities(ner_system, sentence):
             last_tag = tag
 
         # add final closing tag if final token was labeled
-        if last_tag in labels:
+        if last_tag[2:] in labels:
             output += f" </{last_tag}> "
         print(output)
 
