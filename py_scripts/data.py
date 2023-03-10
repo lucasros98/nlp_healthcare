@@ -302,6 +302,31 @@ def split_data(X,Y,random_state=27):
 
     return X_train, Y_train, X_validation, Y_validation, X_test, Y_test
 
+def count_labels(Y):
+    """Count the labels in the data.
+    """
+    #Count the labels
+    label_count = {}
+    for doc in Y:
+        for label in doc:
+            if label[:2] == 'B-':
+                if label[2:] in label_count:
+                    label_count[label[2:]] += 1
+                else:
+                    label_count[label[2:]] = 1
+
+    return label_count
+
+def get_label_distribution(Y_full,Y_sub):
+    """Get the distribution of labels in the full data and the sub data."""
+    
+    totalt_counts = count_labels(Y_full)
+    sub_counts = count_labels(Y_sub)
+
+    print("Label distribution:")
+    for key in sub_counts:
+        print(key + ": " + str(sub_counts[key] / totalt_counts[key]))
+
 def split_randomly(X,Y,data_size=1.0,random_seed=27):
     if(data_size > 1 or data_size < 0):
         raise ValueError("Data size must be between 0 and 1")
