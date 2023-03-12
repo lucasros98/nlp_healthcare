@@ -71,12 +71,29 @@ def preprocessing(IOB=True,punctuation=string.punctuation,no_duplicates=True,cas
         #split string
         words = doc.split()
         
-        if skip_first_word:
-            words = words[1:]
 
-        #Skip if too short
-        if len(words) <= 2:
+        if skip_first_word:
+            #First handle the special cases
+            if len(words) > 3 and words[0].lower() == 'rapport':
+                words = words[3:]
+            elif len(words) > 2 and words[0].lower() == 'speciell':            
+                words = words[2:]
+            else:
+                words = words[1:]
+
+        #Find the last terminal punctuation mark
+        terminal_punctuation = ['.','!','?',')','"']
+        last_punctuation = 0
+        for i,word in enumerate(words):
+            if word in terminal_punctuation or word[-1] in terminal_punctuation:
+                last_punctuation = i
+
+        #Skip if no terminal punctuation mark
+        if last_punctuation == 0:
             continue
+
+        #Remove everything after the last terminal punctuation mark
+        words = words[:last_punctuation+1]
         
         named_entity = False
         inside_entity = False
@@ -137,6 +154,10 @@ def preprocessing(IOB=True,punctuation=string.punctuation,no_duplicates=True,cas
             else:     
                 curr_Y.append('O')
                 curr_X.append(word)
+
+        #Skip if too short
+        if len(curr_X) <= 3:
+            continue
 
         X.append(curr_X)
         Y.append(curr_Y)
