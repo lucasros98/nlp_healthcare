@@ -16,7 +16,7 @@ def convert_to_string_list(list):
     return res
 
 
-def calculate_cosine_similarity(docs1, docs2):
+def calculate_cosine_similarity(docs1, docs2, mode='mean'):
     model = SentenceTransformer('KBLab/sentence-bert-swedish-cased')
 
     docs1 = convert_to_string_list(docs1)
@@ -53,8 +53,10 @@ def calculate_cosine_similarity(docs1, docs2):
         max_scores.append(temp_max_score)
         # append min of temp_scores to min_scores
         min_scores.append(temp_min_score)
-
-    return([np.mean(scores), np.mean(max_scores), np.mean(min_scores)])
+    if (mode == 'mean'):
+        return([np.mean(scores), np.mean(max_scores), np.mean(min_scores)])
+    else:
+        return(scores)
 
 # Not used atm
 def cosine_sim_test(sentence1, sentence2):
@@ -168,9 +170,9 @@ def save_result_file(subfolder, filename, result):
 def print_dataset_similarity_scores(metric='all'):
     percentages = [25, 50, 75, 100]
     for percentage in percentages:
-        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage)
+        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage, uncased=False)
 
-        for dataset in ['test', 'val']:
+        for dataset in ['test']:
             scores = {}
             hyp = X_val if dataset == 'val' else X_test
             ref = X_train
@@ -192,8 +194,33 @@ def print_dataset_similarity_scores(metric='all'):
             filename = f'similarity_scores_{dataset}_data_{percentage}.csv'
             save_result_file('similarity', filename, results)
 
-print_dataset_similarity_scores(metric='all')
+#print_dataset_similarity_scores(metric='all')
 
+def generate_scores_per_sentence(metric='all'):
+    percentages = [25, 50, 75, 100]
+    for percentage in percentages:
+        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage, uncased=False)
+        hyp = X_test
+        ref = X_train
+        scores = {}
+        print('hyp length: ', len(hyp))
+        if metric == 'cosine' or metric == 'all':
+            cos_sim_scores = calculate_cosine_similarity(hyp, ref, mode='per_sentence')
+            # round all values to 4 decimals
+            cos_sim_scores = [round(x, 4) for x in cos_sim_scores]
+            print('scores length: ', len(cos_sim_scores))
+            print('first 10 items of scores: ', cos_sim_scores[:10])
+            scores['Cos_sim'] = cos_sim_scores
+
+        results = pd.DataFrame(columns=['Metric', 'Scores'])
+        for key, value in scores.items():
+            results = pd.concat([results, pd.DataFrame([[key, value]], columns=['Metric', 'Scores'])], ignore_index=True)
+
+        print(f'\nWriting sentence_scores for {percentage}% of dataset to file..')
+        filename = f'per_sentence_similarity_scores_{percentage}.csv'
+        save_result_file('similarity', filename, results)
+
+generate_scores_per_sentence(metric='all')
 
 #Not used atm
 def jaccard_similarity(doc1, doc2):
