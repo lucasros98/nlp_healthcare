@@ -9,6 +9,7 @@ from dotenv import find_dotenv,load_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts')
 from file_handler import read_public_csv,read_csv_file,write_csv_file
 from generation import LabelGenerator
+from preprocessing import remove_duplicates
 load_dotenv(find_dotenv())
 
 def get_tokens(data):
@@ -73,7 +74,7 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.head(n)
         print(df)
 
-def get_training_data(precentage=100,lang='swe',uncased=True,unique_test=False):
+def get_training_data(precentage=100, lang='swe', uncased=True, unique_test=False, augmentation_type=None):
     """Get the training data. Precentage need to be 25, 50, 75 or 100.
     
     Args:
@@ -106,6 +107,16 @@ def get_training_data(precentage=100,lang='swe',uncased=True,unique_test=False):
     X_train,Y_train = read_csv_file(name_train,subfolder="train")
     X_val,Y_val = read_csv_file(name_val,subfolder="val")
     X_test,Y_test = read_csv_file(name_test,subfolder="test")
+
+    # Add augmented data to training data for given augmentation type
+    if augmentation_type != None:
+        print("Length of training data: " + str(len(X_train)))
+        X_aug, Y_aug = read_csv_file(augmentation_type + "_" + str(int(precentage)) + ".csv", subfolder="augmented")
+        X_train = X_train + X_aug
+        Y_train = Y_train + Y_aug
+        print("Length of training data after augmentation type " + augmentation_type + ":" + str(len(X_train)))
+        X_train, Y_train = remove_duplicates(X_train, Y_train)
+        print("Length of training data after removing duplicates: " + str(len(X_train)))
 
     return X_train,Y_train,X_val,Y_val,X_test,Y_test
 
