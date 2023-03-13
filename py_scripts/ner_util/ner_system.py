@@ -18,6 +18,32 @@ from dotenv import find_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts/ner_util')
 from vocab import Vocabulary
 
+class EarlyStopping:
+    def __init__(self,patience=1):
+        self.patience = patience
+        self.counter = 0
+        self.best_score = None
+        self.best_model = None
+        self.early_stop = False
+
+    def __call__(self, val_loss, model):
+        score = val_loss
+        if self.best_score is None:
+            self.best_score = score
+            self.best_model = copy.deepcopy(model)
+        elif score > self.best_score:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.best_model = copy.deepcopy(model)
+            self.counter = 0
+
+    def load_checkpoint(self):
+        return self.best_model
+    
+
 class SequenceDataset(Dataset):
     """A Dataset that stores a list of sentences (X) and their corresponding labels (Y)"""
     def __init__(self, X, Y, word_dropout_prob=None, word_dropout_id=None):
@@ -394,8 +420,10 @@ class SequenceLabeler:
         self.history = defaultdict(list)
         best_f1 = -1 
 
-        #We store the best model for early stopping
-        model_state = None
+        #Early stopping
+        if p.early_stopping:
+            early_stopping = EarlyStopping(patience=p.patience)
+     
             
         for i in range(p.n_epochs):
 
@@ -484,30 +512,29 @@ class SequenceLabeler:
             if val_f1 > best_f1:
                 best_f1 = val_f1
 
-                #Save the model state if early stopping
-                if p.early_stopping:
-                    model_state = copy.deepcopy(self.model.state_dict())
-
             t1 = time.time()
             print(f'Epoch {i+1}: train loss = {train_loss:.4f}, val loss = {val_loss:.4f}, val f1: {val_f1:.4f}, time = {t1-t0:.4f}')
 
             # If we have not improve the validation loss over 2 epochs, we stop the training.
             # We also restore the previously best model state
-            if p.early_stopping and i > 2:
-                if self.history['val_loss'][-1] > self.history['val_loss'][-2] and self.history['val_loss'][-1] > self.history['val_loss'][-3]:
-                    print('Early stopping!')
-                    self.model.load_state_dict(model_state)
+            if p.early_stopping:
+                early_stopping(val_loss, self.model)
+                if early_stopping.early_stop:
+                    print("Early stopping")
+                    self.model = early_stopping.load_checkpoint()
                     break
-
 
         #Calculate the number of training steps
         total_steps = len(self.train_loader) * (i + 1)
         print("Total training steps: {}".format(total_steps))
 
+        #Load the best model
+        if p.early_stopping:
+            self.model = early_stopping.load_checkpoint()
+
         # After the final evaluation, we print more detailed evaluation statistics, including
         # precision, recall, and F-scores for the different types of named entities.
         results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2',zero_division=1)
-        print_report(results)
 
         return self.history
         

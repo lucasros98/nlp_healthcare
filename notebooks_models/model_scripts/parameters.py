@@ -3,7 +3,7 @@ import torch
 class NERParameters():
 
     # Random seed, for reproducibility.
-    random_seed = 0
+    random_seed = 1
     
     # cuda or cpu
     device = "cuda" if torch.cuda.is_available() else "cpu"   
@@ -21,6 +21,7 @@ class NERParameters():
 
     #Early stopping parameters
     early_stopping = True
+    patience = 3
 
     #For linear learning rate decay
     lr_decay = False
