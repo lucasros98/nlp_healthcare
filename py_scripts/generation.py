@@ -228,12 +228,13 @@ class LabelGenerator:
         return number
         
         
-    def generate_age(self,contains_string=True):
+    def generate_age(self,contains_string=None):
         age = random.randint(16,99)
         if age < 50 or age > 85:
             age = random.randint(16,99)
 
-        if contains_string:
+        rand = random.random()
+        if contains_string or rand < 0.5:
             return str(age) + "-årig"
         
         return age
