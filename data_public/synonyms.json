@@ -40609,12 +40609,6 @@
         ]
     },
     {
-        "word": "höger",
-        "synonyms": [
-            "moderat"
-        ]
-    },
-    {
         "word": "högerpartiet",
         "synonyms": [
             "moderaterna"
@@ -50533,12 +50527,6 @@
         ]
     },
     {
-        "word": "kommunisterna",
-        "synonyms": [
-            "vänsterpartiet"
-        ]
-    },
-    {
         "word": "komocka",
         "synonyms": [
             "kospillning"
@@ -51320,8 +51308,7 @@
             "anslutning",
             "bekantskap",
             "beröring",
-            "förbindelse",
-            "vägguttag"
+            "förbindelse"
         ]
     },
     {
@@ -62890,8 +62877,6 @@
     {
         "word": "moderat",
         "synonyms": [
-            "höger",
-            "högerpartist",
             "måttlig",
             "måttligt",
             "sansad"
@@ -115538,12 +115523,6 @@
         "word": "vänslas",
         "synonyms": [
             "hångla"
-        ]
-    },
-    {
-        "word": "vänsterpartiet",
-        "synonyms": [
-            "kommunisterna"
         ]
     },
     {
