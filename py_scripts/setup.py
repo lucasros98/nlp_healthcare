@@ -12,7 +12,7 @@ from file_handler import write_csv_file
 from preprocessing import preprocessing
 
 #Write to train, test and validation data folder
-from data import create_data_dirs, split_data, split_randomly
+from data import create_data_dirs, split_data, split_randomly, generate_unique_test_data
 
 #For translation 
 from translation import translate_text_to_eng_batch
@@ -68,6 +68,9 @@ write_csv_file(filename="train_swe_10_cased",X=X_train_10_cased,Y=Y_train_10_cas
 write_csv_file(filename="train_swe_25_cased",X=X_train_25_cased,Y=Y_train_25_cased,subfolder="train")
 write_csv_file(filename="train_swe_50_cased",X=X_train_50_cased,Y=Y_train_50_cased,subfolder="train")
 write_csv_file(filename="train_swe_75_cased",X=X_train_75_cased,Y=Y_train_75_cased,subfolder="train")
+
+#Generate unique test data
+generate_unique_test_data()
 
 print("Creating english data...")
 
