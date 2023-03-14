@@ -407,8 +407,10 @@ class SequenceLabeler:
 
         # Create the learning rate scheduler.
         if p.lr_decay:
+            warmup_steps = int(p.warmup_steps * total_steps)
+            
             scheduler = get_linear_schedule_with_warmup(optimizer, 
-                                                num_warmup_steps = p.warmup_steps,
+                                                num_warmup_steps = warmup_steps,
                                                 num_training_steps = total_steps)
 
 
