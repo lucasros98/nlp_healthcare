@@ -2,29 +2,31 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn')
 
 # Fictional examples
-text_examples_sv = [
+test_examples_sv = [
     'ssk Lisa försöker att få tag i BIB Jonas Berg. Vid behov, informera pat fru när plats finns ledig på Sophiahemmet. Förhoppningsvis innan 20230221',
     'Dietist hör av sig och kommer boka om tiden till 12/7 kl 14. Besök kommer ske på avd 314',
-    'Kontakt med dr Kayed, tel nr 0711442373. Pat är 82 år, längd 175 cm och mår illa efter måltider.',
+    'Kontakt med Dr Kayed, tel nr 0711442373. Pat är 82 år, längd 175 cm och mår illa efter måltider.',
 ]
-text_examples_en = [
+test_examples_en = [
     "ssk Lisa tries to get hold of BIB Jonas Berg. If necessary, inform the pat wife when the place is available at Sophiahemmet. Hopefully before 20230221",
     "Action Dietist will be in touch and will reschedule the time to 12/7 at 2 p.m. Visits will be made on avd 314",
     "Contact with Dr. Kayed, tel. 0711442373. Pat is 82 years old, length 175 cm and feels nauseous after meals."
 ]
 
+# Print evaluation test examples
 def print_examples(ner_system, lang):
     if(lang == "sv"):
-        for i, sentence in enumerate(text_examples_sv):
-            print(f"\nSV example {i + 1}")
-            show_entities(ner_system, [sentence.lower().split()])
+        for i, sentence in enumerate(test_examples_sv):
+            print(f"\nSV evaluation test {i + 1}")
+            show_entities(ner_system, [sentence.split()])
             print("")
     else:
-        for i, sentence in enumerate(text_examples_en):
-            print(f"\nEN example {i + 1}")
-            show_entities(ner_system, [sentence.lower().split()])
+        for i, sentence in enumerate(test_examples_en):
+            print(f"\nEN evaluation test {i + 1}")
+            show_entities(ner_system, [sentence.split()])
             print("")
 
+# Run examples through the model and print the resulting entities
 def show_entities(ner_system, sentence):
     tagging_system = ner_system.params.tagging_scheme
     tagged_sentence = ner_system.predict(sentence)
@@ -35,9 +37,9 @@ def show_entities(ner_system, sentence):
     
     labels = ['First_Name', 'Last_Name', 'Phone_Number', 'Age', 'Full_Date', 'Date_Part', 'Health_Care_Unit', 'Location']
 
-    print('All token tags:')
+    print('Every tag:')
     for tokens, tags in zip(sentence, tagged_sentence):
-        output = ''
+        output = '      '
         for token, tag in zip(tokens, tags):
             if tag[2:] in labels:
                 output += f"<{tag}> {token} </{tag}> "
@@ -45,19 +47,19 @@ def show_entities(ner_system, sentence):
                 output += f"{token} "
         print(output)
 
-    print('Combined token tags:')
+    print('Combined tags:')
     for tokens, tags in zip(sentence, tagged_sentence):
-        output = ''
+        output = '     '
         last_tag = ''
         last_token = ''
         for token, tag in zip(tokens, tags):
-            # print tags
-            if last_tag[2:] in labels and (tag != last_tag or not token.startswith("##")):
-                output += f" </{last_tag}>"
-            if tag[2:] in labels and not token.startswith("##"):
-                 output += f" <{tag}>"
+            # print tags (remove B- and I-)
+            if last_tag[2:] in labels and (tag[2:] != last_tag[2:] or not tag.startswith("I-")):
+                output += f" </{last_tag[2:]}>"
+            if tag[2:] in labels and not tag.startswith("I-"):
+                 output += f" <{tag[2:]}>"
 
-            # print tokens
+            # print tokens (remove ##)
             if token.startswith("##"):
                 output += f"{token[2:]}"
             else:
@@ -69,7 +71,7 @@ def show_entities(ner_system, sentence):
 
         # add final closing tag if final token was labeled
         if last_tag[2:] in labels:
-            output += f" </{last_tag}> "
+            output += f" </{last_tag[2:]}> "
         print(output)
 
 def plot_training(ner_system):
