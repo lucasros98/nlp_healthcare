@@ -40,6 +40,8 @@ class DataAugmentation():
                     sentence_new, labels_new = self.random_deletion(sentence, labels)
                 elif self.aug_type == "mention_replacement":
                     sentence_new, labels_new = self.mention_replacement(sentence, labels)
+                elif self.aug_type == "shuffle_within_segments":
+                    sentence_new, labels_new = self.shuffle_within_segments(sentence, labels)
                 X_new.append(sentence_new)
                 Y_new.append(labels_new)    
 
@@ -137,17 +139,42 @@ class DataAugmentation():
                 new_sentence.append(word)
                 new_labels.append(label)
         return(new_sentence, new_labels)
-                
+
+
+    def shuffle_within_segments(self, sentence, labels):
+        new_sentence = []
+        new_labels = []
+        segments = []
+        prev_label = ''
+        for word, label in zip(sentence, labels):
+            _label = label if label == 'O' else label[2:]
+            if _label != prev_label:
+                segments.append([(word, label)])
+                prev_label = _label
+            else:
+                segments[-1].append((word, label))
+
+        dist = random.binomial(n=1, p=self.binomial_p, size=len(segments))
+        for i, prob in enumerate(dist):
+            if prob == 1:
+                random.shuffle(segments[i])
+        
+        for segment in segments:
+            for word, label in segment:
+                new_sentence.append(word)
+                new_labels.append(label)
+
+        return(new_sentence, new_labels)
 
 data = [
     ['ansvarig', 'vid', 'inskrivning', 'är', 'ssk', 'Kalle', 'Ohlsson'],
     ['besök', 'läkare', '19/5', 'på', 'morgonen'],
-    ['ansvarig', 'vid', 'inskrivning', 'är', 'ssk', 'Kim', 'Dahlström', 'Johansson'],
+    ['ansvarig', 'vid', 'inskrivning', 'är', 'ssk', 'Kim', 'Dahlström', 'Johansson', 'Kallesson'],
     ['besök', 'mamma', 'Lucas', 'på', 'morgonen']
 ], [
     ['O', 'O', 'O', 'O', 'O', 'B-First_Name', 'B-Last_Name'],
     ['O', 'O', 'B-Date_Part', 'O', 'O'],
-    ['O', 'O', 'O', 'O', 'O', 'B-First_Name', 'B-Last_Name', 'I-Last_Name'],
+    ['O', 'O', 'O', 'O', 'O', 'B-First_Name', 'B-Last_Name', 'I-Last_Name', 'I-Last_Name'],
     ['O', 'O', 'B-First_Name', 'O', 'O']
 ]
     
