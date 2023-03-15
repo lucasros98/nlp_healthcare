@@ -20,7 +20,7 @@ PATH = os.getenv('DATA_PATH')
 class DataAugmentation():
     def __init__(self, X, Y, aug_type):
         self.generator = LabelGenerator()
-        self.binomial_p = 0.5
+        self.binomial_p = 1
         self.num_new_docs = 1
         self.X = X
         self.Y = Y
@@ -42,6 +42,9 @@ class DataAugmentation():
                     sentence_new, labels_new = self.mention_replacement(sentence, labels)
                 elif self.aug_type == "shuffle_within_segments":
                     sentence_new, labels_new = self.shuffle_within_segments(sentence, labels)
+                elif self.aug_type == "label_wise_token_replacement":
+                    label_dict = self.create_label_dict(self.X, self.Y)
+                    sentence_new, labels_new = self.label_wise_token_replacement(sentence, labels, label_dict)
                 X_new.append(sentence_new)
                 Y_new.append(labels_new)    
 
@@ -53,7 +56,7 @@ class DataAugmentation():
         
         return X_new, Y_new
 
-    def back_translation(self, X, Y):
+    def back_translation(self):
         #Back translate the text
         X_new, Y_new = translate_text_to_eng_batch(self.X, self.Y)
         X_new, Y_new = translate_text_to_swe_batch(X_new,Y_new)
@@ -64,7 +67,7 @@ class DataAugmentation():
         return X_new, Y_new
 
 
-    def get_gender_of_prev_word(word):
+    def get_gender_of_prev_word(self, word):
         if word in ['mamma', 'mamman', 'mor', 'modern', 'syster', 'systern', 'mormor', 'farmor', 'dotter', 'dottern', 'fru', 'frun', 'hustru', 'hustrun', 'brud', 'bruden', 'faster', 'fastern', 'moster', 'mostern']:
             return 'woman'
         elif word in ['pappa', 'pappan', 'far', 'fadern', 'bror', 'brodern', 'morfar', 'farfar', 'son', 'sonen', 'herr', 'herren', 'man', 'make', 'maken', 'brudgum', 'farbror', 'farbrorn' 'morbror', 'morbrorn']:
@@ -73,7 +76,7 @@ class DataAugmentation():
             return None
 
 
-    def mention_replacement(sentence, labels):
+    def mention_replacement(self, sentence, labels):
         new_sentence = []
         new_labels = []
 
@@ -87,7 +90,7 @@ class DataAugmentation():
             gender = None
             if label != 'O':
                 if label[2:] == 'First_Name' and i > 0:
-                    gender = get_gender_of_prev_word(sentence[i-1])
+                    gender = self.get_gender_of_prev_word(sentence[i-1])
                     if gender == None:
                         gender = self.generator.get_gender_of_first_name(word)
                 if dist[mention_index] == 1: 
@@ -111,7 +114,7 @@ class DataAugmentation():
         return(new_sentence, new_labels)
 
 
-    def random_deletion(sentence, labels):
+    def random_deletion(self, sentence, labels):
         dist = random.binomial(n=1, p=self.binomial_p, size=len(sentence))
         new_sentence = []
         new_labels = []
@@ -166,20 +169,44 @@ class DataAugmentation():
 
         return(new_sentence, new_labels)
 
+    # create dict with labels as keys and list of words as values
+    def create_label_dict(self, X, Y):
+        label_dict = {}
+        for sentence, labels in zip(X, Y):
+            for word, label in zip(sentence, labels):
+                _label = label if label == 'O' else label[2:]
+                if _label in label_dict:
+                    label_dict[_label].append(word)
+                else:
+                    label_dict[_label] = [word]
+        return label_dict
+
+    def label_wise_token_replacement(self, sentence, labels, label_dict):
+        new_sentence = []
+        new_labels = []
+        dist = random.binomial(n=1, p=self.binomial_p, size=len(sentence))
+
+        # replace words with random words of the same label
+        for word, label, prob in zip(sentence, labels, dist):
+            _label = label if label == 'O' else label[2:]
+            if prob == 1:
+                new_sentence.append(random.choice(label_dict[_label]))
+                new_labels.append(label)
+            else:
+                new_sentence.append(word)
+                new_labels.append(label)
+        return(new_sentence, new_labels)
+
 data = [
-    ['ansvarig', 'vid', 'inskrivning', 'är', 'ssk', 'Kalle', 'Ohlsson'],
-    ['besök', 'läkare', '19/5', 'på', 'morgonen'],
+    ['besök', 'mamma', 'Lucas', '19/5', 'på', 'morgonen'],
     ['ansvarig', 'vid', 'inskrivning', 'är', 'ssk', 'Kim', 'Dahlström', 'Johansson', 'Kallesson'],
-    ['besök', 'mamma', 'Lucas', 'på', 'morgonen']
 ], [
-    ['O', 'O', 'O', 'O', 'O', 'B-First_Name', 'B-Last_Name'],
-    ['O', 'O', 'B-Date_Part', 'O', 'O'],
+    ['O', 'O', 'B-First_Name', 'B-Date_Part', 'O', 'O'],
     ['O', 'O', 'O', 'O', 'O', 'B-First_Name', 'B-Last_Name', 'I-Last_Name', 'I-Last_Name'],
-    ['O', 'O', 'B-First_Name', 'O', 'O']
 ]
     
 X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=25,uncased=False)
 
 #Data augmentation
-data_aug = DataAugmentation(X_train, Y_train, "synonym_replacement")
+data_aug = DataAugmentation(X_train, Y_train, "shuffle_within_segments")
 X_train, Y_train = data_aug.augment_data()
