@@ -78,7 +78,7 @@ class Model(nn.Module):
         super().__init__() 
 
         # BERT model.
-        self.bert = bert_model
+        self.bert = AutoModel.from_pretrained('KB/bert-base-swedish-cased')
 
         # Output unit.
         self.top_layer = nn.Linear(self.bert.config.hidden_size, seq_labeler.n_labels)
@@ -102,28 +102,31 @@ params = NERParameters()
 
 # ## Finetuning BERT model
 
-# In[ ]:
+#The results will be a dataframe with the following columns: entity,precision,recall,f1,number
+#The results also contains the following entities Date_Part, First_Name, Last_Name, Full_Date, Health_Care_Unit, Phone_Number, Age, Location, overall
+results = []
 
+#Run the model with 5 times with different random seeds
+for i in range(5):
+    params.random_seed = i
+    #Instantiate the NER system
+    ner_system = ner_util.SequenceLabeler(params, Model, bert_tokenizer=AutoTokenizer.from_pretrained('KB/bert-base-swedish-cased'))
 
-ner_system = ner_util.SequenceLabeler(params, Model, bert_tokenizer=tokenizer)
+    #Fit the model
+    ner_system.fit(X_train, Y_train, X_val, Y_val)
 
-ner_system.fit(X_train, Y_train, X_val, Y_val)
+    #Evaluation of the system
+    res = ner_system.evaluate_model(X_test,Y_test)
+    results.append(res)
 
-
-# ## Evaluation of the system
-# 
-# Evaluate the sytem on the test data.
-
-# In[ ]:
-
-
-res = ner_system.evaluate_model(X_test,Y_test)
+average_results, highest_f1_results = evaluation.calculate_average_results(results)
+    
 
 #Create a file name based on the script name and the precentage of the data used for training
 try:
     curr_file = os.path.basename(__file__).split(".")[0]
     filename = curr_file + "_" + str(int(precentage)) + ".csv"
-    save_result_file(curr_file,filename, res)
+    save_result_file(curr_file,filename, highest_f1_results)
 except:
     print("Error occured while saving the results. Please check the sys args.")
 
