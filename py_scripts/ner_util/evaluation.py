@@ -77,7 +77,7 @@ def show_entities(ner_system, sentence):
 def calculate_average_results(results):
     average_results = {}
     highest_f1_results = {}
-    highest_f1 = 0
+    highest_f1 = -1
     for res in results:
         for entity in res:
             if entity not in average_results:
@@ -85,7 +85,10 @@ def calculate_average_results(results):
             for metric in res[entity]:
                 if metric not in average_results[entity]:
                     average_results[entity][metric] = 0
-                average_results[entity][metric] += res[entity][metric]
+                
+                # Check if the metric exists for the current entity
+                if metric in res[entity]:
+                    average_results[entity][metric] += res[entity][metric]
                 if metric == "f1" and res[entity][metric] > highest_f1:
                     highest_f1 = res[entity][metric]
                     highest_f1_results = res
