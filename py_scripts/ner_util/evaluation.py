@@ -74,6 +74,29 @@ def show_entities(ner_system, sentence):
             output += f" </{last_tag[2:]}> "
         print(output)
 
+def calculate_average_results(results):
+    average_results = {}
+    highest_f1_results = {}
+    highest_f1 = 0
+    for res in results:
+        for entity in res:
+            if entity not in average_results:
+                average_results[entity] = {}
+            for metric in res[entity]:
+                if metric not in average_results[entity]:
+                    average_results[entity][metric] = 0
+                average_results[entity][metric] += res[entity][metric]
+                if metric == "f1" and res[entity][metric] > highest_f1:
+                    highest_f1 = res[entity][metric]
+                    highest_f1_results = res
+
+    # Calculate the average values for each metric
+    for entity in average_results:
+        for metric in average_results[entity]:
+            average_results[entity][metric] = average_results[entity][metric] / len(results)
+
+    return average_results, highest_f1_results
+
 def plot_training(ner_system):
   fig, ax = plt.subplots(1, 2, figsize=(2*6,1*6))
   ax[0].plot(ner_system.history['train_loss'])
