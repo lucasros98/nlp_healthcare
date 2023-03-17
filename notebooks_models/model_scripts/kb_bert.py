@@ -105,6 +105,7 @@ params = NERParameters()
 #The results will be a dataframe with the following columns: entity,precision,recall,f1,number
 #The results also contains the following entities Date_Part, First_Name, Last_Name, Full_Date, Health_Care_Unit, Phone_Number, Age, Location, overall
 results = []
+best_results = None
 
 #Run the model with 5 times with different random seeds
 for i in range(5):
@@ -119,14 +120,18 @@ for i in range(5):
     res = ner_system.evaluate_model(X_test,Y_test)
     results.append(res)
 
-average_results, highest_f1_results = evaluation.calculate_average_results(results)
+    #Save the best results
+    if best_results is None or best_results["overall"]["f1"] < res["overall"]["f1"]:
+        best_results = res
+
+average_results = evaluation.calculate_average_results(results)
     
 
 #Create a file name based on the script name and the precentage of the data used for training
 try:
     curr_file = os.path.basename(__file__).split(".")[0]
     filename = curr_file + "_" + str(int(precentage)) + ".csv"
-    save_result_file(curr_file,filename, highest_f1_results)
+    save_result_file(curr_file,filename, best_results)
 except:
     print("Error occured while saving the results. Please check the sys args.")
 
