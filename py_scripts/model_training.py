@@ -1,46 +1,87 @@
-#Given a model and a set of parameters, train the model and return the results
-#Run the model multiple times and average the results
-import pandas as pd
 import os
 import sys
+import pandas as pd
 from torch import nn
 from dotenv import load_dotenv, find_dotenv
+from transformers import AutoTokenizer, AutoModel
+from py_scripts.file_handler import save_result_file
+from py_scripts.data import get_training_data
+import py_scripts.ner_util.ner_system as ner_util
+import py_scripts.ner_util.evaluation as evaluation
+from parameters import NERParameters
 
+sys.path.append(os.path.dirname(find_dotenv()))
 load_dotenv(find_dotenv())
 
-from data import get_training_data
-import ner_util.ner_system as ner_util
+#Defining the model
+class Model(nn.Module):
+    def __init__(self, seq_labeler):
+        super().__init__()
+        self.bert = AutoModel.from_pretrained('KB/bert-base-swedish-cased')
+        self.top_layer = nn.Linear(self.bert.config.hidden_size, seq_labeler.n_labels)
 
-def run_model(params, model, tokenizer, precentage=100, lang='swe',runs=5,uncased=False):
-    #Get the data (X_train, Y_train, X_val, Y_val, X_test, Y_test)
-    X_train, Y_train, X_val, Y_val, X_test, Y_test = get_training_data(precentage,lang,uncased)
-  
-    #results
-    results = pd.DataFrame([])
+    def forward(self, words):
+        outputs = self.bert(words)
+        res = outputs[0]
+        return self.top_layer(res)
 
-    #Fit the model
+def run_model(model_name="KB/bert-base-swedish-cased", lang="sv",runs=5,save=True):
+
+    try:
+        precentage = float(float(sys.argv[1])) if len(sys.argv) > 1 and sys.argv[1] != "None" else 100
+    except:
+        precentage = 100
+        print("Error occured while parsing the precentage from the sys args. Please check the sys args. Using {}% of the data.".format(precentage))
+
+    #Loading the data
+    precentage = get_precentage()
+
+    X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage,uncased=False)
+    print(f"Length of the data:\nTrain: {len(X_train)}\nValidation: {len(X_val)}\nTest: {len(X_test)}")
+
+    # Finetuning BERT model
+    params = NERParameters()
+    results = []
+    best_results = pd.DataFrame()
+
+    #Run the model with 5 times with different random seeds
     for i in range(runs):
-        print("Run: ", i)
-
-        #Update the seed
         params.random_seed = i
+        #Instantiate the NER system
+        ner_system = ner_util.SequenceLabeler(params, Model, bert_tokenizer=AutoTokenizer.from_pretrained('KB/bert-base-swedish-cased'))
 
-        #Copy the model
-        curr_model = model.copy()
-
-        #Create a new instance of the model
-        ner_system = ner_util.SequenceLabeler(params, curr_model, bert_tokenizer=tokenizer)
-        
         #Fit the model
         ner_system.fit(X_train, Y_train, X_val, Y_val)
 
-        #Get the evaluation results
-        result = ner_system.evaluate_model(X_test,Y_test)
+        #Evaluation of the system
+        res = ner_system.evaluate_model(X_test,Y_test)
+        results.append(res)
 
-        #Add the results to the list
-        results = results.append(result, ignore_index=True)
+        #Save the best results
+        if best_results.empty:
+            best_results = res
+        else:
+            overall_f1 = res.loc[res['entity'] == 'overall', 'f1'].values[0]
+            best_f1 = best_results.loc[best_results['entity'] == 'overall', 'f1'].values[0]
 
-    
-    #Average the results over each run
-    results = results.mean(axis=0)
-    return results
+            if overall_f1 > best_f1:
+                best_results = res
+
+    average_results = evaluation.calculate_average_results(results)
+
+    print("Average results:")
+    avg_df = pd.DataFrame.from_dict(average_results, orient='index')
+    print(avg_df)    
+
+    #Create a file name based on the script name and the precentage of the data used for training
+    #Save the results to file
+    if save:
+        try:
+            curr_file = os.path.basename(__file__).split(".")[0]
+            filename = curr_file + "_" + str(int(precentage)) + ".csv"
+            save_result_file(curr_file,filename, best_results)
+        except:
+            print("Error occured while saving the results. Please check the sys args.")
+
+    #Evaluation on some examples
+    evaluation.print_examples(ner_system, lang)

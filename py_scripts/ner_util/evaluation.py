@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 plt.style.use('seaborn')
 
 # Fictional examples
@@ -74,7 +75,9 @@ def show_entities(ner_system, sentence):
             output += f" </{last_tag[2:]}> "
         print(output)
 
-def calculate_average_results(results):
+def calculate_average_results(dataframes):
+    results = [df.set_index('entity').to_dict(orient='index') for df in dataframes]
+
     average_results = {}
     for res in results:
         for entity in res:
