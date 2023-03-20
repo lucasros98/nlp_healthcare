@@ -13,6 +13,8 @@ class Logger:
             config=config,
             # give this run a name
             name=name,
+            # reinitialize wandb if it has already been initialized
+            reinit=True
         )
     
     def __call__(self, values):

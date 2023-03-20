@@ -17,7 +17,7 @@ from parameters import NERParameters
 class Model(nn.Module):
     def __init__(self, seq_labeler):
         super().__init__()
-        self.bert = AutoTokenizer.from_pretrained('/mimer/NOBACKUP/groups/snic2021-23-309/project-data/nlp-for-healthcare/SweDeClin-BERT_copy/',local_files_only=True)
+        self.bert = AutoModel.from_pretrained('/mimer/NOBACKUP/groups/snic2021-23-309/project-data/nlp-for-healthcare/SweDeClin-BERT_copy/',local_files_only=True)
         self.top_layer = nn.Linear(self.bert.config.hidden_size, seq_labeler.n_labels)
 
     def forward(self, words):

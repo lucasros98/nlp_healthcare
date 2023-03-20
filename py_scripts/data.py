@@ -173,15 +173,21 @@ def create_data_dirs():
     if not os.path.exists(data_path + 'processed'):
         os.makedirs(data_path + 'processed')
 
-def generate_unique_test_data(uncased=True):
+def generate_unique_test_data(uncased=True,lang="swe"):
 
     #Get the test and training data
-    if uncased:
-        X_train,Y_train = read_csv_file("train_swe_100.csv",subfolder="train")
-        X_test,Y_test = read_csv_file("test_swe.csv",subfolder="test")
+    if lang == "swe":
+        if uncased:
+            X_train,Y_train = read_csv_file("train_swe_100.csv",subfolder="train")
+            X_test,Y_test = read_csv_file("test_swe.csv",subfolder="test")
+        else:
+            X_train,Y_train = read_csv_file("train_swe_100_cased.csv",subfolder="train")
+            X_test,Y_test = read_csv_file("test_swe_cased.csv",subfolder="test")
+    elif lang == "eng":
+        X_train,Y_train = read_csv_file("train_eng_100_cased.csv",subfolder="train")
+        X_test,Y_test = read_csv_file("test_eng_cased.csv",subfolder="test")
     else:
-        X_train,Y_train = read_csv_file("train_swe_100_cased.csv",subfolder="train")
-        X_test,Y_test = read_csv_file("test_swe_cased.csv",subfolder="test")
+        return
 
     #Create blacklist for entities from training data
     black_list = {}
@@ -328,10 +334,14 @@ def generate_unique_test_data(uncased=True):
 
                 
     #Save the new test data
-    if uncased:
-        write_csv_file("test_swe_unique",X_new,Y_new,subfolder="test")
-    else:
-        write_csv_file("test_swe_cased_unique",X_new,Y_new,subfolder="test")
+    if lang == "swe":
+        if uncased:
+            write_csv_file("test_swe_unique",X_new,Y_new,subfolder="test")
+        else:
+            write_csv_file("test_swe_cased_unique",X_new,Y_new,subfolder="test")
+
+    elif lang == "eng":
+            write_csv_file("test_eng_unique",X_new,Y_new,subfolder="test")
 
 def split_data(X,Y,random_state=27):
     """Split the data into train, val, and test sets."""
