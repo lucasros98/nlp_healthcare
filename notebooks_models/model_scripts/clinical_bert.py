@@ -49,6 +49,8 @@ params.model_name = curr_file + "_{}".format(str(int(precentage)))
 #Run the model with 5 times with different random seeds
 for i in range(5):
     params.random_seed = i
+    params.run_name = params.model_name + "_{}".format(i)
+
     #Instantiate the NER system
     ner_system = ner_util.SequenceLabeler(params, Model, bert_tokenizer=AutoTokenizer.from_pretrained('emilyalsentzer/Bio_ClinicalBERT'))
 
