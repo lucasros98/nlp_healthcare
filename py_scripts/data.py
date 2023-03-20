@@ -276,7 +276,11 @@ def generate_unique_test_data(uncased=True):
                     if label_string in black_list[entity]:
                         #Generate new label
                         new_label = label_gen.generate_random_entity(entity)
-              
+                        
+                        #check if int -> then convert to string
+                        if type(new_label) == int:
+                            new_label = str(new_label)
+
                     if new_label == None:
                         splitted = label_string.split(" ")
                     else:
