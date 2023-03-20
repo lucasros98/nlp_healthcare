@@ -70,7 +70,9 @@ write_csv_file(filename="train_swe_50_cased",X=X_train_50_cased,Y=Y_train_50_cas
 write_csv_file(filename="train_swe_75_cased",X=X_train_75_cased,Y=Y_train_75_cased,subfolder="train")
 
 #Generate unique test data
-generate_unique_test_data()
+generate_unique_test_data(uncased=True)
+generate_unique_test_data(uncased=False)
+
 
 print("Creating english data...")
 

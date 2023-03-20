@@ -74,6 +74,25 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.head(n)
         print(df)
 
+def get_unique_test(lang="swe", uncased=True):
+    """Get the unique test data.
+    
+    Returns:
+        lists: The unique test data and labels. (X_test,Y_test)
+    """
+    if lang not in ['swe','eng']:
+        print("Language need to be 'swe' or 'eng'")
+        return
+
+    #Check if we should use cased or uncased data
+    if(uncased == True):
+        name_test = "test_" + lang + "_unique.csv"
+    else:
+        name_test = "test_" + lang + "_cased_unique.csv"
+
+    X_test,Y_test = read_csv_file(name_test,subfolder="test")
+    return X_test,Y_test
+
 def get_training_data(precentage=100, lang='swe', uncased=True, unique_test=False, augmentation_type=None):
     """Get the training data. Precentage need to be 25, 50, 75 or 100.
     
@@ -253,9 +272,10 @@ def generate_unique_test_data(uncased=True):
                 label_string = label_string + " " + X_test[i][j]
             else:
                 if inside_entity:
+                    new_label = None
                     if label_string in black_list[entity]:
                         #Generate new label
-                        label_string = label_gen.generate_random_entity(entity)
+                        new_label = label_gen.generate_random_entity(entity)
               
                     if new_label == None:
                         splitted = label_string.split(" ")

@@ -8,7 +8,7 @@ load_dotenv(find_dotenv())
 
 from transformers import AutoTokenizer, AutoModel
 from py_scripts.file_handler import save_result_file
-from py_scripts.data import get_training_data
+from py_scripts.data import get_training_data, get_unique_test
 import py_scripts.ner_util.ner_system as ner_util
 import py_scripts.ner_util.evaluation as evaluation
 from parameters import NERParameters
@@ -34,12 +34,17 @@ except:
 
 #Loading the data
 X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage,lang="eng",uncased=False)
+X_test_unique, Y_test_unique = get_unique_test()
 print(f"Length of the data:\nTrain: {len(X_train)}\nValidation: {len(X_val)}\nTest: {len(X_test)}")
 
 # Finetuning BERT model
 params = NERParameters()
 results = []
 best_results = pd.DataFrame()
+
+#Set model name
+curr_file = os.path.basename(__file__).split(".")[0]
+params.model_name = curr_file + "_{}".format(precentage)
 
 #Run the model with 5 times with different random seeds
 for i in range(5):
@@ -73,7 +78,6 @@ print(avg_df)
 #Create a file name based on the script name and the precentage of the data used for training
 #Save the results to file
 try:
-    curr_file = os.path.basename(__file__).split(".")[0]
     filename = curr_file + "_" + str(int(precentage)) + ".csv"
     save_result_file(curr_file,filename, best_results)
 except:
