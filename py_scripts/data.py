@@ -279,8 +279,8 @@ def generate_unique_test_data(uncased=True):
               
                     if new_label == None:
                         splitted = label_string.split(" ")
-
-                    splitted = new_label.split(" ")
+                    else:
+                        splitted = new_label.split(" ")
                     
                     for k in range(len(splitted)):
                         if k == 0:

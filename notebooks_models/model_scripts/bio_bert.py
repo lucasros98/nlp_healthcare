@@ -43,7 +43,7 @@ best_results = pd.DataFrame()
 
 #Set model name
 curr_file = os.path.basename(__file__).split(".")[0]
-params.model_name = curr_file + "_{}".format(precentage)
+params.model_name = curr_file + "_{}".format(str(int(precentage)))
 
 #Run the model with 5 times with different random seeds
 for i in range(5):
