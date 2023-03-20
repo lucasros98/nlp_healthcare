@@ -17,6 +17,7 @@ seqeval = ev.load('seqeval')
 from dotenv import find_dotenv
 sys.path.append(os.path.dirname(find_dotenv()) + '/py_scripts/ner_util')
 from vocab import Vocabulary
+from logger import Logger
 
 class EarlyStopping:
     def __init__(self,patience=1):
@@ -344,7 +345,7 @@ class SequenceLabeler:
         self.verbose = verbose
 
         # Initialize the logger.
-        self.logger = Logger(project="yolotime", config=vars(params))
+        self.logger = Logger(project=params.model_name, config=vars(params))
 
     # Preprocess the data, build vocabularies and data loaders.
     def preprocess(self, Xtrain, Ytrain, Xval, Yval,tagging_scheme=None):
