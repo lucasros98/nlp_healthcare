@@ -343,6 +343,9 @@ class SequenceLabeler:
         self.bert_tokenizer = bert_tokenizer
         self.verbose = verbose
 
+        # Initialize the logger.
+        self.logger = Logger(project="yolotime", config=vars(params))
+
     # Preprocess the data, build vocabularies and data loaders.
     def preprocess(self, Xtrain, Ytrain, Xval, Yval,tagging_scheme=None):
         # Build vocabularies
@@ -517,6 +520,11 @@ class SequenceLabeler:
             t1 = time.time()
             print(f'Epoch {i+1}: train loss = {train_loss:.4f}, val loss = {val_loss:.4f}, val f1: {val_f1:.4f}, time = {t1-t0:.4f}')
 
+            # Log the metrics for this epoch.
+            values = {"Epoch": i+1, "train loss": train_loss, "val loss": val_loss, "val f1": val_f1, "time": t1-t0, "learning_rate": scheduler.get_last_lr()[0] if p.lr_decay else "None"}
+            if self.logger:
+                self.logger(values=values)
+
             # If we have not improve the validation loss over 2 epochs, we stop the training.
             # We also restore the previously best model state
             if p.early_stopping:
@@ -529,6 +537,9 @@ class SequenceLabeler:
         #Calculate the number of training steps
         total_steps = len(self.train_loader) * (i + 1)
         print("Total training steps: {}".format(total_steps))
+
+        # Log the total number of training steps
+        self.logger(values={"Total training steps": total_steps})
 
         #Load the best model
         if p.early_stopping:
@@ -606,5 +617,9 @@ class SequenceLabeler:
         #Print evalutation statistics
         results = seqeval.compute(predictions=predictions, references=references, mode='strict', scheme='IOB2',zero_division=1)
         report = print_report(results)
+
+        # Log the results
+        if self.logger:
+            self.logger(values={"overall_precision": results["overall_precision"],"overall_recall": results["overall_recall"], "overall_f1": results["overall_f1"]})
 
         return report
