@@ -62,7 +62,7 @@ for i in range(5):
     results.append(res)
 
     #Evaluation on the unique test set
-    if len(X_test_unique) > 0:
+    if X_test_unique is not None and len(X_test_unique) > 0:
         res_unique = ner_system.evaluate_model(X_test_unique,Y_test_unique,unique_labels=True)
 
 
