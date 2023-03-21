@@ -34,6 +34,7 @@ except:
 
 #Loading the data
 X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage,lang="eng",uncased=False)
+X_test_unique, Y_test_unique = get_unique_test(lang="eng")
 print(f"Length of the data:\nTrain: {len(X_train)}\nValidation: {len(X_val)}\nTest: {len(X_test)}")
 
 # Finetuning BERT model
@@ -59,6 +60,11 @@ for i in range(5):
     #Evaluation of the system
     res = ner_system.evaluate_model(X_test,Y_test)
     results.append(res)
+
+    #Evaluation on the unique test set
+    if len(X_test_unique) > 0:
+        res_unique = ner_system.evaluate_model(X_test_unique,Y_test_unique)
+
 
     #Save the best results
     if best_results.empty:

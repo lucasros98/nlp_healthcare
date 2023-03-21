@@ -61,6 +61,10 @@ for i in range(5):
     res = ner_system.evaluate_model(X_test,Y_test)
     results.append(res)
 
+    #Evaluation on unique test data
+    if len(X_test_unique) > 0:
+        res_unique = ner_system.evaluate_model(X_test_unique,Y_test_unique)
+
     #Save the best results
     if best_results.empty:
         best_results = res

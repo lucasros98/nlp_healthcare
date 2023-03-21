@@ -75,7 +75,7 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.head(n)
         print(df)
 
-def get_unique_test(lang="swe", uncased=True):
+def get_unique_test(lang="swe", uncased=False):
     """Get the unique test data.
     
     Returns:
