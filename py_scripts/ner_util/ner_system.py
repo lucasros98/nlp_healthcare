@@ -345,7 +345,7 @@ class SequenceLabeler:
         self.verbose = verbose
 
         # Initialize the logger.
-        self.logger = Logger(project=params.model_name, config=vars(params))
+        self.logger = Logger(project=params.model_name, config=vars(params),name=params.run_name)
 
     # Preprocess the data, build vocabularies and data loaders.
     def preprocess(self, Xtrain, Ytrain, Xval, Yval,tagging_scheme=None):
