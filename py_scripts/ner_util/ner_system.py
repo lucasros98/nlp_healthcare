@@ -580,7 +580,7 @@ class SequenceLabeler:
 
 
 
-    def evaluate_model(self, X, Y):
+    def evaluate_model(self, X, Y, unique_labels=False):
         # This method evaluates the model on test data.
         
         word_tokenized = self.bert_tokenizer(X, is_split_into_words=True, truncation=True, 
@@ -621,6 +621,9 @@ class SequenceLabeler:
 
         # Log the results
         if self.logger:
-            self.logger(values={"overall_precision": results["overall_precision"],"overall_recall": results["overall_recall"], "overall_f1": results["overall_f1"]})
+            if unique_labels:
+                self.logger(values={"unique_precision": results["unique_precision"],"unique_recall": results["unique_recall"], "unique_f1": results["unique_f1"]})
+            else:
+                self.logger(values={"overall_precision": results["overall_precision"],"overall_recall": results["overall_recall"], "overall_f1": results["overall_f1"]})
 
         return report
