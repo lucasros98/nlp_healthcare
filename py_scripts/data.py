@@ -93,7 +93,32 @@ def get_unique_test(lang="swe", uncased=True):
     X_test,Y_test = read_csv_file(name_test,subfolder="test")
     return X_test,Y_test
 
-def get_training_data(precentage=100, lang='swe', uncased=True, unique_test=False, augmentation_type=None):
+def append_augmented_data(X, Y, params):
+    """Append augmented data to training data sets X and Y.
+    
+    Args:
+        X, Y (list): The lists of words and labels.
+        params (dict): The augmentation parameters.
+
+    Returns:
+        lists: The new training data and labels. (X,Y)
+    """
+
+    _X = X.copy()
+    _Y = Y.copy()
+    augmentation_type, num_sentences, p = params
+    file_name = augmentation_type + "_s" + str(num_sentences) + "_p" + str(p) + ".csv"
+
+    print("Length of training data: " + str(len(_X)))
+    X_aug, Y_aug = read_csv_file(file_name, subfolder="augmented")
+    _X = _X + X_aug
+    _Y = _Y + Y_aug
+    print("Length of training data after augmentation type " + augmentation_type + ": " + str(len(_X)))
+    _X, _Y = remove_duplicates(_X, _Y)
+    print("Length of training data after removing duplicates: " + str(len(_X)))
+    return _X, _Y
+
+def get_training_data(precentage=100, lang='swe', uncased=True, unique_test=False):
     """Get the training data. Precentage need to be 25, 50, 75 or 100.
     
     Args:
@@ -126,16 +151,6 @@ def get_training_data(precentage=100, lang='swe', uncased=True, unique_test=Fals
     X_train,Y_train = read_csv_file(name_train,subfolder="train")
     X_val,Y_val = read_csv_file(name_val,subfolder="val")
     X_test,Y_test = read_csv_file(name_test,subfolder="test")
-
-    # Add augmented data to training data for given augmentation type
-    if augmentation_type != None:
-        print("Length of training data: " + str(len(X_train)))
-        X_aug, Y_aug = read_csv_file(augmentation_type + "_" + str(int(precentage)) + ".csv", subfolder="augmented")
-        X_train = X_train + X_aug
-        Y_train = Y_train + Y_aug
-        print("Length of training data after augmentation type " + augmentation_type + ":" + str(len(X_train)))
-        X_train, Y_train = remove_duplicates(X_train, Y_train)
-        print("Length of training data after removing duplicates: " + str(len(X_train)))
 
     return X_train,Y_train,X_val,Y_val,X_test,Y_test
 
