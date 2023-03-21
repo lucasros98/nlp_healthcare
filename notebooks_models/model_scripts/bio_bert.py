@@ -63,7 +63,7 @@ for i in range(5):
 
     #Evaluation on the unique test set
     if len(X_test_unique) > 0:
-        res_unique = ner_system.evaluate_model(X_test_unique,Y_test_unique)
+        res_unique = ner_system.evaluate_model(X_test_unique,Y_test_unique,unique_labels=True)
 
 
     #Save the best results
