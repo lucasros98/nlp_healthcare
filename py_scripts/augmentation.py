@@ -18,19 +18,18 @@ load_dotenv(find_dotenv())
 PATH = os.getenv('DATA_PATH')
 
 class DataAugmentation():
-    def __init__(self, X, Y, aug_type):
+    def __init__(self, X, Y, aug_type, binomial_p, num_new_docs, data_size):
         self.generator = LabelGenerator()
-        self.binomial_p = 1
-        self.num_new_docs = 1
+        self.binomial_p = binomial_p
+        self.num_new_docs = num_new_docs
         self.X = X
         self.Y = Y
         self.aug_type = aug_type
+        self.data_size = data_size
 
     def augment_data(self):
         X_new = []
         Y_new = []
-
-        print(f'aug_type={self.aug_type} with p={self.binomial_p}, num_new_docs={self.num_new_docs}')
 
         for sentence, labels in tqdm(zip(self.X, self.Y)):
             for i in range(self.num_new_docs):
@@ -49,12 +48,12 @@ class DataAugmentation():
                 Y_new.append(labels_new)    
 
         #Write the new data to a csv file
-        write_csv_file(self.aug_type, X_new, Y_new, "augmented")
+        write_csv_file(self.aug_type + "_s" + str(self.num_new_docs) + "_p" + str(self.binomial_p) + "_d" + str(self.data_size), X_new, Y_new, "augmented")
         
-        print(f'Data augmentation {self.aug_type}: done')
-        print(f'Number of new documents: {len(X_new)}')
-        
-        return X_new, Y_new
+        print(f'Data augmentation {self.aug_type}, num new docs {self.num_new_docs}, p {self.binomial_p}, data size {self.data_size}: DONE')
+        print(f'New documents created: {len(X_new)}')
+        print('')
+
 
     def back_translation(self):
         #Back translate the text
@@ -67,34 +66,44 @@ class DataAugmentation():
         return X_new, Y_new
 
 
-    def get_gender_of_prev_word(self, word):
-        if word in ['mamma', 'mamman', 'mor', 'modern', 'syster', 'systern', 'mormor', 'farmor', 'dotter', 'dottern', 'fru', 'frun', 'hustru', 'hustrun', 'brud', 'bruden', 'faster', 'fastern', 'moster', 'mostern']:
+    def get_gender(self, prev_word, first_name):
+        if prev_word in ['mamma', 'mamman', 'mor', 'modern', 'syster', 'systern', 'mormor', 'farmor', 'dotter', 'dottern', 'fru', 'frun', 'hustru', 'hustrun', 'brud', 'bruden', 'faster', 'fastern', 'moster', 'mostern']:
             return 'woman'
-        elif word in ['pappa', 'pappan', 'far', 'fadern', 'bror', 'brodern', 'morfar', 'farfar', 'son', 'sonen', 'herr', 'herren', 'man', 'make', 'maken', 'brudgum', 'farbror', 'farbrorn' 'morbror', 'morbrorn']:
+        elif prev_word in ['pappa', 'pappan', 'far', 'fadern', 'bror', 'brodern', 'morfar', 'farfar', 'son', 'sonen', 'herr', 'herren', 'man', 'make', 'maken', 'brudgum', 'farbror', 'farbrorn' 'morbror', 'morbrorn']:
             return 'man'
         else:
-            return None
+            return self.generator.get_gender_of_first_name(first_name)
 
 
     def mention_replacement(self, sentence, labels):
+        merged_tokens = []
+        merged_labels = []
+        # merge mentions that are split into multiple tokens (e.g. "B-First_Name, I-First_Name" -> "B-First_Name")
+        for i, (word, label) in enumerate(zip(sentence, labels)):
+            if label != 'O':
+                if i > 0 and labels[i-1][2:] == label[2:]:
+                    merged_tokens[-1] = merged_tokens[-1] + ' ' + word
+                else:
+                    merged_tokens.append(word)
+                    merged_labels.append(label)
+            else:
+                merged_tokens.append(word)
+                merged_labels.append(label)
+
         new_sentence = []
         new_labels = []
-
-        mentions = list(filter(lambda x: x != 'O', labels)) # get all labels that are not 'O'
-        num_mentions = len(mentions)
-        dist = random.binomial(n=1, p=self.binomial_p, size=num_mentions) # distribution of mentions to replace
+        mentions = list(filter(lambda x: x != 'O', merged_labels)) # get all labels that are not 'O'
+        dist = random.binomial(n=1, p=self.binomial_p, size=len(mentions)) # distribution of mentions to replace
         mention_index = 0
         mentions_replaced = 0
 
-        for i, (word, label) in enumerate(zip(sentence, labels)):
+        for i, (word, label) in enumerate(zip(merged_tokens, merged_labels)):
             gender = None
             if label != 'O':
-                if label[2:] == 'First_Name' and i > 0:
-                    gender = self.get_gender_of_prev_word(sentence[i-1])
-                    if gender == None:
-                        gender = self.generator.get_gender_of_first_name(word)
+                if label == 'B-First_Name' and i > 0:
+                    gender = self.get_gender(sentence[i-1], word)
                 if dist[mention_index] == 1: 
-                    new_mention = self.generator.generate_random_entity(label[2:], params={"gender": gender})
+                    new_mention = str(self.generator.generate_random_entity(label[2:], params={"gender": gender}))
                     new_mention_len = len(new_mention.split()) # get number of words in new mention
                     for j in range(new_mention_len):
                         new_sentence.append(new_mention.split()[j])
@@ -198,15 +207,25 @@ class DataAugmentation():
         return(new_sentence, new_labels)
 
 data = [
-    ['besök', 'mamma', 'Lucas', '19/5', 'på', 'morgonen'],
+    ['besök', 'mamma', 'Lucas', '80', 'år', '19/5', '-18', 'på', 'morgonen'],
     ['ansvarig', 'vid', 'inskrivning', 'är', 'ssk', 'Kim', 'Dahlström', 'Johansson', 'Kallesson'],
 ], [
-    ['O', 'O', 'B-First_Name', 'B-Date_Part', 'O', 'O'],
+    ['O', 'O', 'B-First_Name', 'B-Age', 'I-Age', 'B-Full_Date', 'I-Full_Date', 'O', 'O'],
     ['O', 'O', 'O', 'O', 'O', 'B-First_Name', 'B-Last_Name', 'I-Last_Name', 'I-Last_Name'],
 ]
-    
-X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=25,uncased=False)
 
 #Data augmentation
-data_aug = DataAugmentation(X_train, Y_train, "shuffle_within_segments")
-X_train, Y_train = data_aug.augment_data()
+data_size_range = [25, 50, 75, 100]
+p_range = [0.1, 0.3, 0.5, 0.7]
+num_new_docs_range = [1, 3, 6, 10]
+aug_methods = ['random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement', 'mention_replacement']
+
+print("Starting data augmentation...")
+for data_size in data_size_range:
+    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size,uncased=False)
+    for p in p_range:
+        for num_new_docs in num_new_docs_range:
+            for aug_method in aug_methods:
+                data_aug = DataAugmentation(X_train, Y_train, aug_method, binomial_p=p, num_new_docs=num_new_docs, data_size=data_size)
+                data_aug.augment_data()
+print("Data augmentation done jihooo!")
