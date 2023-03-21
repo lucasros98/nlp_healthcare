@@ -134,7 +134,6 @@ def unmask_entities(X_translated, mapping):
                             curr_x.append(new_word)
                             break
                     if not special_case:
-                        print(word)
                         curr_y.append("O")
                         curr_x.append(word)
             else:
