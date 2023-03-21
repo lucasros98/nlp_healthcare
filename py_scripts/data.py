@@ -106,8 +106,8 @@ def append_augmented_data(X, Y, params):
 
     _X = X.copy()
     _Y = Y.copy()
-    augmentation_type, num_sentences, p = params
-    file_name = augmentation_type + "_s" + str(num_sentences) + "_p" + str(p) + ".csv"
+    augmentation_type, num_sentences, p, data_size = params
+    file_name = augmentation_type + "_s" + str(num_sentences) + "_p" + str(p) + "_d" + str(data_size) + ".csv"
 
     print("Length of training data: " + str(len(_X)))
     X_aug, Y_aug = read_csv_file(file_name, subfolder="augmented")
