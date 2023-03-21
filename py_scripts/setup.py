@@ -78,20 +78,22 @@ print("Creating english data...")
 
 #Create english data (uncased)
 X_train_en, Y_train_en = translate_text_to_eng_batch(X_train_cased,Y_train_cased)
-X_val_en, Y_val_en = translate_text_to_eng_batch(X_val_cased,Y_val_cased)
-X_test_en, Y_test_en = translate_text_to_eng_batch(X_test_cased,Y_test_cased)
-
-X_train_en_25, Y_train_en_25 = translate_text_to_eng_batch(X_train_25_cased,Y_train_25_cased)
-X_train_en_50, Y_train_en_50 = translate_text_to_eng_batch(X_train_50_cased,Y_train_50_cased)
-X_train_en_75, Y_train_en_75 = translate_text_to_eng_batch(X_train_75_cased,Y_train_75_cased)
-
-#Write to files
 write_csv_file(filename="train_eng_100_cased",X=X_train_en,Y=Y_train_en,subfolder="train")
+
+X_val_en, Y_val_en = translate_text_to_eng_batch(X_val_cased,Y_val_cased)
 write_csv_file(filename="val_eng_cased",X=X_val_en,Y=Y_val_en,subfolder="val")
+
+X_test_en, Y_test_en = translate_text_to_eng_batch(X_test_cased,Y_test_cased)
 write_csv_file(filename="test_eng_cased",X=X_test_en,Y=Y_test_en,subfolder="test")
 
+X_train_en_25, Y_train_en_25 = translate_text_to_eng_batch(X_train_25_cased,Y_train_25_cased)
 write_csv_file(filename="train_eng_25_cased",X=X_train_en_25,Y=Y_train_en_25,subfolder="train")
+
+X_train_en_50, Y_train_en_50 = translate_text_to_eng_batch(X_train_50_cased,Y_train_50_cased)
 write_csv_file(filename="train_eng_50_cased",X=X_train_en_50,Y=Y_train_en_50,subfolder="train")
+
+
+X_train_en_75, Y_train_en_75 = translate_text_to_eng_batch(X_train_75_cased,Y_train_75_cased)
 write_csv_file(filename="train_eng_75_cased",X=X_train_en_75,Y=Y_train_en_75,subfolder="train")
 
-generate_unique_test_data(uncased=False,language="eng")
+generate_unique_test_data(uncased=False,lang="eng")

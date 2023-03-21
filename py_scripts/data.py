@@ -3,6 +3,7 @@ import sys
 import os
 import random
 import numpy as np
+import copy
 from sklearn.model_selection import train_test_split
 
 from dotenv import find_dotenv,load_dotenv
@@ -381,7 +382,11 @@ def get_label_distribution(Y_full,Y_sub):
     for key in sub_counts:
         print(key + ": " + str(sub_counts[key] / totalt_counts[key]))
 
-def split_randomly(X,Y,data_size=1.0,random_seed=27):
+def split_randomly(X_data,Y_data,data_size=1.0,random_seed=27):
+    #Create a copy of the data (deep copy)
+    X = copy.deepcopy(X_data)
+    Y = copy.deepcopy(Y_data)
+
     if(data_size > 1 or data_size < 0):
         raise ValueError("Data size must be between 0 and 1")
     

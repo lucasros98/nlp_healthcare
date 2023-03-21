@@ -122,8 +122,21 @@ def unmask_entities(X_translated, mapping):
                     curr_y.append(mapping[word][1])
                     curr_x.append(mapping[word][0])
                 else:
-                    curr_y.append("O")
-                    curr_x.append(word)
+                    special_case = False
+                    #check if a substring of the word is an entity
+                    #this is a special case for the translation model
+                    for key, value in mapping.items():
+                        if(key in word):
+                            special_case = True
+                            #replace the substring with the entity
+                            new_word = word.replace(key,value[0])
+                            curr_y.append(value[1])
+                            curr_x.append(new_word)
+                            break
+                    if not special_case:
+                        print(word)
+                        curr_y.append("O")
+                        curr_x.append(word)
             else:
                 curr_y.append("O")
                 curr_x.append(word)
@@ -133,7 +146,10 @@ def unmask_entities(X_translated, mapping):
     return new_X, new_Y
     
 
-def mask_entities(X,Y):
+def mask_entities(X_data,Y_data):
+    X = X_data.copy()
+    Y = Y_data.copy()
+
     new_X = []
     linkage = {}
     for i in range(len(Y)):
@@ -177,6 +193,9 @@ def translate_text_to_eng_batch(X,Y,params=TranslationParameters(),batch_size=64
         X_res += X_translated
         Y_res += Y_translated
 
+    #clear the cache
+    torch.cuda.empty_cache()
+
     return X_res,Y_res
 
 def translate_text_to_swe_batch(X,Y,params=TranslationParameters(),batch_size=64):
@@ -194,6 +213,9 @@ def translate_text_to_swe_batch(X,Y,params=TranslationParameters(),batch_size=64
         #Append the results
         X_res += X_translated
         Y_res += Y_translated
+    
+    #clear the cache
+    torch.cuda.empty_cache()
 
     return X_res,Y_res
 
@@ -226,5 +248,4 @@ def translate_from_file(filename,batch_size=64):
         Y_res += Y_translated
 
     #print first 10 results 
-    print(X_res[:10])
     return X_res,Y_res
