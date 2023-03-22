@@ -345,8 +345,10 @@ class SequenceLabeler:
         self.verbose = verbose
 
         # Initialize the logger.
-        self.logger = Logger(project=params.model_name, config=vars(params),name=params.run_name)
-
+        if params.logging:
+            self.logger = Logger(project=params.model_name, config=vars(params),name=params.run_name)
+        else:
+            self.logger = None
     # Preprocess the data, build vocabularies and data loaders.
     def preprocess(self, Xtrain, Ytrain, Xval, Yval,tagging_scheme=None):
         # Build vocabularies
@@ -540,7 +542,8 @@ class SequenceLabeler:
         print("Total training steps: {}".format(total_steps))
 
         # Log the total number of training steps
-        self.logger(values={"Total training steps": total_steps})
+        if self.logger:
+            self.logger(values={"Total training steps": total_steps})
 
         #Load the best model
         if p.early_stopping:

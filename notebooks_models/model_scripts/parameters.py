@@ -28,6 +28,9 @@ class NERParameters():
         self.lr_decay = True
         self.warmup_steps = 0.1 # Warmup steps (In precentage)
 
+        #Logging parameters (For wandb)
+        self.logging = True
+
         #Augmented
 
         # Word dropout rate.

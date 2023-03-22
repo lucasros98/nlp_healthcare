@@ -29,8 +29,8 @@ def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local
             return self.top_layer(res)
 
     #Loading the data
-    X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage,uncased=False)
-    X_test_unique, Y_test_unique = get_unique_test()
+    X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage)
+    X_test_unique, Y_test_unique = get_unique_test(lang=lang)
     print(f"Length of the data:\nTrain: {len(X_train)}\nValidation: {len(X_val)}\nTest: {len(X_test)}")
 
     # Instantiate the parameters

@@ -30,7 +30,7 @@ def clean_label_string(token,label_lower):
 import string
 import re
 
-def preprocessing(IOB=True,punctuation=string.punctuation,no_duplicates=True,cased=False,skip_first_word=True):
+def preprocessing(IOB=True,punctuation=string.punctuation,no_duplicates=True,cased=True,skip_first_word=True):
     #Load file and get lines
     with open(PATH) as f:
         documents = f.read().splitlines() 

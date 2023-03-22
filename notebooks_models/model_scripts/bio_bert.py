@@ -34,7 +34,7 @@ except:
 
 #Loading the data
 X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage,lang="eng",uncased=False)
-X_test_unique, Y_test_unique = get_unique_test(lang="eng")
+X_test_unique, Y_test_unique = get_unique_test(lang="en")
 print(f"Length of the data:\nTrain: {len(X_train)}\nValidation: {len(X_val)}\nTest: {len(X_test)}")
 
 # Finetuning BERT model

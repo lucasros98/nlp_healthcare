@@ -75,21 +75,17 @@ def print_unknown_tokens(tokenizer, data, n=30):
         df = df.head(n)
         print(df)
 
-def get_unique_test(lang="swe", uncased=False):
+def get_unique_test(lang='sv'):
     """Get the unique test data.
     
     Returns:
         lists: The unique test data and labels. (X_test,Y_test)
     """
-    if lang not in ['swe','eng']:
-        print("Language need to be 'swe' or 'eng'")
+    if lang not in ['sv','en']:
+        print("Language need to be 'sv' or 'en'")
         return
 
-    #Check if we should use cased or uncased data
-    if(uncased == True):
-        name_test = "test_" + lang + "_unique.csv"
-    else:
-        name_test = "test_" + lang + "_cased_unique.csv"
+    name_test = "test_" + lang + "_unique.csv"
 
     X_test,Y_test = read_csv_file(name_test,subfolder="test")
     return X_test,Y_test
@@ -125,12 +121,12 @@ def append_augmented_data(X, Y, params):
     print("Length of training data after removing duplicates: " + str(len(_X)))
     return _X, _Y
 
-def get_training_data(precentage=100, lang='swe', uncased=True, unique_test=False):
+def get_training_data(precentage=100, lang='sv', unique_test=False):
     """Get the training data. Precentage need to be 25, 50, 75 or 100.
     
     Args:
         precentage (int): The precentage of the training data to use.
-        lang (str): The language to use. (swe or eng)
+        lang (str): The language to use. (sv or en)
 
     Returns:
         lists: The training data and labels. (X_train,Y_train,X_val,Y_val,X_test,Y_test)
@@ -140,20 +136,13 @@ def get_training_data(precentage=100, lang='swe', uncased=True, unique_test=Fals
         print("Precentage need to be 10, 25, 50, 75 or 100")
         return
 
-    if lang not in ['swe','eng']:
-        print("Language need to be 'swe' or 'eng'")
+    if lang not in ['sv','en']:
+        print("Language need to be 'sv' or 'en'")
         return
-    
-    #Check if we should use cased or uncased data
-    if(uncased == True):
-        name_train = "train_" + lang + "_" + str(int(precentage)) + ".csv"
-        name_val = "val_" + lang + ".csv"
-        name_test = "test_" + lang + ("_unique" if unique_test else "") + ".csv"
-    else:
-        name_train = "train_" + lang + "_" + str(int(precentage)) + "_cased.csv"
-        name_val = "val_" + lang + "_cased.csv"
-        name_test = "test_" + lang + "_cased" + ("_unique" if unique_test else "") + ".csv"
 
+    name_train = "train_" + lang + "_" + str(int(precentage)) + ".csv"
+    name_val = "val_" + lang + ".csv"
+    name_test = "test_" + lang + "" + ("_unique" if unique_test else "") + ".csv"
 
     X_train,Y_train = read_csv_file(name_train,subfolder="train")
     X_val,Y_val = read_csv_file(name_val,subfolder="val")
@@ -178,11 +167,6 @@ def create_data_dirs():
     if not os.path.exists(data_path + 'train'):
         os.makedirs(data_path + 'train')
     
-
-    if not os.path.exists(data_path + 'train/cased'):
-        os.makedirs(data_path + 'train/cased')
-    
-    
     if not os.path.exists(data_path + 'augmented'):
         os.makedirs(data_path + 'augmented')
 
@@ -195,19 +179,15 @@ def create_data_dirs():
     if not os.path.exists(data_path + 'processed'):
         os.makedirs(data_path + 'processed')
 
-def generate_unique_test_data(uncased=True,lang="swe"):
+def generate_unique_test_data(lang='sv'):
 
     #Get the test and training data
-    if lang == "swe":
-        if uncased:
-            X_train,Y_train = read_csv_file("train_swe_100.csv",subfolder="train")
-            X_test,Y_test = read_csv_file("test_swe.csv",subfolder="test")
-        else:
-            X_train,Y_train = read_csv_file("train_swe_100_cased.csv",subfolder="train")
-            X_test,Y_test = read_csv_file("test_swe_cased.csv",subfolder="test")
-    elif lang == "eng":
-        X_train,Y_train = read_csv_file("train_eng_100_cased.csv",subfolder="train")
-        X_test,Y_test = read_csv_file("test_eng_cased.csv",subfolder="test")
+    if lang == 'sv':
+        X_train,Y_train = read_csv_file("train_sv_100.csv",subfolder="train")
+        X_test,Y_test = read_csv_file("test_sv.csv",subfolder="test")
+    elif lang == "en":
+        X_train,Y_train = read_csv_file("train_en_100.csv",subfolder="train")
+        X_test,Y_test = read_csv_file("test_en.csv",subfolder="test")
     else:
         return
 
@@ -286,10 +266,8 @@ def generate_unique_test_data(uncased=True,lang="swe"):
                         else:
                             y_curr.append("I-" + entity)
                         
-                        if uncased:
-                            x_curr.append(splitted[k].lower())
-                        else:
-                            x_curr.append(splitted[k])
+
+                        x_curr.append(splitted[k])
                     
                 #Add the current entity to the blacklist
                 inside_entity = True
@@ -320,10 +298,7 @@ def generate_unique_test_data(uncased=True,lang="swe"):
                         else:
                             y_curr.append("I-" + entity)
                         
-                        if uncased:
-                            x_curr.append(splitted[k].lower())
-                        else:
-                            x_curr.append(splitted[k])
+                        x_curr.append(splitted[k])
 
                     inside_entity = False
                     label_string = ""
@@ -343,11 +318,9 @@ def generate_unique_test_data(uncased=True,lang="swe"):
                         y_curr.append("B-" + entity)
                     else:
                         y_curr.append("I-" + entity)
-                    
-                    if uncased:
-                        x_curr.append(splitted[k].lower())
-                    else:
-                        x_curr.append(splitted[k])
+
+                    x_curr.append(splitted[k])
+
                 inside_entity = False
                 label_string = ""
 
@@ -356,14 +329,10 @@ def generate_unique_test_data(uncased=True,lang="swe"):
 
                 
     #Save the new test data
-    if lang == "swe":
-        if uncased:
-            write_csv_file("test_swe_unique",X_new,Y_new,subfolder="test")
-        else:
-            write_csv_file("test_swe_cased_unique",X_new,Y_new,subfolder="test")
-
-    elif lang == "eng":
-            write_csv_file("test_eng_unique",X_new,Y_new,subfolder="test")
+    if lang == 'sv':
+        write_csv_file("test_sv_unique",X_new,Y_new,subfolder="test")
+    elif lang == 'en':
+        write_csv_file("test_en_unique",X_new,Y_new,subfolder="test")
 
 def split_data(X,Y,random_state=27):
     """Split the data into train, val, and test sets."""

@@ -170,7 +170,7 @@ def save_result_file(subfolder, filename, result):
 def print_dataset_similarity_scores(metric='all'):
     percentages = [25, 50, 75, 100]
     for percentage in percentages:
-        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage, uncased=False)
+        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage)
 
         for dataset in ['test']:
             scores = {}
@@ -199,7 +199,7 @@ def print_dataset_similarity_scores(metric='all'):
 def generate_scores_per_sentence(metric='all'):
     percentages = [25, 50, 75, 100]
     for percentage in percentages:
-        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage, uncased=False)
+        X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=percentage)
         hyp = X_test
         ref = X_train
         scores = {}

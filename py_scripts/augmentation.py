@@ -254,7 +254,7 @@ aug_methods = ['back_translation', 'random_deletion', 'synonym_replacement', 'sh
 
 def run_data_augmentation(args):
     data_size, p, num_new_docs, aug_method = args
-    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size,uncased=False)
+    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size)
     data_aug = DataAugmentation(X_train, Y_train, aug_method, binomial_p=p, num_new_docs=num_new_docs, data_size=data_size)
     data_aug.augment_data()
 
