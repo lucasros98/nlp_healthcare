@@ -14,13 +14,13 @@ import py_scripts.ner_util.evaluation as evaluation
 from parameters import NERParameters
 
 
-def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",precentage=100,lang='sv',runs=5,aug_params=None):
+def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local_files_only=False,precentage=100,lang='sv',runs=5,aug_params=None):
 
     #Defining the model
     class Model(nn.Module):
         def __init__(self, seq_labeler):
             super().__init__()
-            self.bert = AutoModel.from_pretrained(bert_model)
+            self.bert = AutoModel.from_pretrained(bert_model,local_files_only=local_files_only)
             self.top_layer = nn.Linear(self.bert.config.hidden_size, seq_labeler.n_labels)
 
         def forward(self, words):
@@ -53,7 +53,7 @@ def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",prece
         params.random_seed = i
         params.run_name = params.run_tag + "_" + str(i)
         #Instantiate the NER system
-        ner_system = ner_util.SequenceLabeler(params, Model, bert_tokenizer=AutoTokenizer.from_pretrained(bert_model))
+        ner_system = ner_util.SequenceLabeler(params, Model, bert_tokenizer=AutoTokenizer.from_pretrained(bert_model,local_files_only=local_files_only))
 
         #Fit the model
         ner_system.fit(X_train, Y_train, X_val, Y_val)
