@@ -136,8 +136,8 @@ def get_training_data(precentage=100, lang='swe', uncased=True, unique_test=Fals
         lists: The training data and labels. (X_train,Y_train,X_val,Y_val,X_test,Y_test)
     """
 
-    if precentage not in [25,50,75,100]:
-        print("Precentage need to be 25, 50, 75 or 100")
+    if precentage not in [10,25,50,75,100]:
+        print("Precentage need to be 10, 25, 50, 75 or 100")
         return
 
     if lang not in ['swe','eng']:
