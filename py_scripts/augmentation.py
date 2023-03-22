@@ -10,6 +10,7 @@ from preprocessing import remove_duplicates
 import os
 import sys
 from dotenv import load_dotenv,find_dotenv
+from multiprocessing import Pool
 
 sys.path.append(os.path.dirname(find_dotenv()))
 load_dotenv(find_dotenv())
@@ -28,24 +29,21 @@ class DataAugmentation():
         self.data_size = data_size
 
     def augment_data(self):
-        X_new = []
-        Y_new = []
-
         for sentence, labels in tqdm(zip(self.X, self.Y)):
             for i in range(self.num_new_docs):
-                if self.aug_type == "synonym_replacement":
-                    sentence_new, labels_new = self.synonym_replacement(sentence, labels)
+                if self.aug_type == "back_translation":
+                    X_new, Y_new = self.back_translation(sentence, labels)
+                elif self.aug_type == "synonym_replacement":
+                    X_new, Y_new = self.synonym_replacement(sentence, labels)
                 elif self.aug_type == "random_deletion":
-                    sentence_new, labels_new = self.random_deletion(sentence, labels)
+                    X_new, Y_new = self.random_deletion(sentence, labels)
                 elif self.aug_type == "mention_replacement":
-                    sentence_new, labels_new = self.mention_replacement(sentence, labels)
+                    X_new, Y_new = self.mention_replacement(sentence, labels)
                 elif self.aug_type == "shuffle_within_segments":
-                    sentence_new, labels_new = self.shuffle_within_segments(sentence, labels)
+                    X_new, Y_new = self.shuffle_within_segments(sentence, labels)
                 elif self.aug_type == "label_wise_token_replacement":
                     label_dict = self.create_label_dict(self.X, self.Y)
-                    sentence_new, labels_new = self.label_wise_token_replacement(sentence, labels, label_dict)
-                X_new.append(sentence_new)
-                Y_new.append(labels_new)    
+                    X_new, Y_new = self.label_wise_token_replacement(sentence, labels, label_dict)  
 
         #Write the new data to a csv file
         write_csv_file(self.aug_type + "_s" + str(self.num_new_docs) + "_p" + str(self.binomial_p) + "_d" + str(self.data_size), X_new, Y_new, "augmented")
@@ -55,13 +53,13 @@ class DataAugmentation():
         print('')
 
 
-    def back_translation(self):
+    def back_translation(self, X, Y):
         #Back translate the text
-        X_new, Y_new = translate_text_to_eng_batch(self.X, self.Y)
+        X_new, Y_new = translate_text_to_eng_batch(X, Y)
         X_new, Y_new = translate_text_to_swe_batch(X_new,Y_new)
 
         #Write the new data to a csv file
-        write_csv_file("back_translation", X_new, Y_new, "augmented")
+        #write_csv_file("back_translation", X_new, Y_new, "augmented")
             
         return X_new, Y_new
 
@@ -100,11 +98,12 @@ class DataAugmentation():
         for i, (word, label) in enumerate(zip(merged_tokens, merged_labels)):
             gender = None
             if label != 'O':
+                # special case 1: get gender of first name
                 if label == 'B-First_Name' and i > 0:
                     gender = self.get_gender(sentence[i-1], word)
                 if dist[mention_index] == 1: 
                     new_mention = str(self.generator.generate_random_entity(label[2:], params={"gender": gender}))
-                    new_mention_len = len(new_mention.split()) # get number of words in new mention
+                    new_mention_len = len(new_mention.split()) # get number of words in generated mention
                     for j in range(new_mention_len):
                         new_sentence.append(new_mention.split()[j])
                         if j > 0:
@@ -127,6 +126,7 @@ class DataAugmentation():
         dist = random.binomial(n=1, p=self.binomial_p, size=len(sentence))
         new_sentence = []
         new_labels = []
+        # delete words of label 'O' by probability p
         for word, label, prob in zip(sentence, labels, dist):
             if prob == 1 and label == 'O':
                 continue
@@ -140,10 +140,11 @@ class DataAugmentation():
         dist = random.binomial(n=1, p=self.binomial_p, size=len(sentence))
         new_sentence = []
         new_labels = []
+        # replace words of label 'O' with synonyms by probability p
         for word, label, prob in zip(sentence, labels, dist):
             if prob == 1 and label == 'O':
                 synonym = self.generator.generate_synonym(word)
-                syn_len = len(synonym.split()) # get number of words in synonym
+                syn_len = len(synonym.split()) # get number of words in generated synonym
                 for i in range(syn_len):
                     new_sentence.append(synonym.split()[i])
                     new_labels.append('O')
@@ -152,8 +153,8 @@ class DataAugmentation():
                 new_labels.append(label)
         return(new_sentence, new_labels)
 
-
-    def shuffle_within_segments(self, sentence, labels):
+    # Old version (shuffles labels as well)
+    def shuffle_within_segments_old(self, sentence, labels):
         new_sentence = []
         new_labels = []
         segments = []
@@ -166,15 +167,46 @@ class DataAugmentation():
             else:
                 segments[-1].append((word, label))
 
+        # shuffle words and labels within segments with probability p
         dist = random.binomial(n=1, p=self.binomial_p, size=len(segments))
         for i, prob in enumerate(dist):
             if prob == 1:
                 random.shuffle(segments[i])
         
+        # merge segments into new sentence
         for segment in segments:
             for word, label in segment:
                 new_sentence.append(word)
                 new_labels.append(label)
+
+        return(new_sentence, new_labels)
+
+    def shuffle_within_segments(self, sentence, labels):
+        new_sentence = []
+        new_labels = []
+        segments = []
+        prev_label = ''
+        for word, label in zip(sentence, labels):
+            _label = label if label == 'O' else label[2:]
+            if _label != prev_label:
+                segments.append([word])
+                prev_label = _label
+            else:
+                segments[-1].append(word)
+
+        # shuffle words within segments with probability p
+        dist = random.binomial(n=1, p=self.binomial_p, size=len(segments))
+        for i, prob in enumerate(dist):
+            if prob == 1:
+                random.shuffle(segments[i])
+        
+        # merge segments into new sentence 
+        for segment in segments:
+            for word in segment:
+                new_sentence.append(word)
+        
+        # add labels to new sentence (not shuffled)
+        new_labels = labels
 
         return(new_sentence, new_labels)
 
@@ -215,17 +247,20 @@ data = [
 ]
 
 #Data augmentation
-data_size_range = [25, 50, 75, 100]
+data_size_range = [10, 25, 50, 75, 100]
 p_range = [0.1, 0.3, 0.5, 0.7]
 num_new_docs_range = [1, 3, 6, 10]
-aug_methods = ['random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement', 'mention_replacement']
+aug_methods = ['back_translation', 'random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement', 'mention_replacement']
+
+def run_data_augmentation(args):
+    data_size, p, num_new_docs, aug_method = args
+    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size,uncased=False)
+    data_aug = DataAugmentation(X_train, Y_train, aug_method, binomial_p=p, num_new_docs=num_new_docs, data_size=data_size)
+    data_aug.augment_data()
 
 print("Starting data augmentation...")
-for data_size in data_size_range:
-    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size,uncased=False)
-    for p in p_range:
-        for num_new_docs in num_new_docs_range:
-            for aug_method in aug_methods:
-                data_aug = DataAugmentation(X_train, Y_train, aug_method, binomial_p=p, num_new_docs=num_new_docs, data_size=data_size)
-                data_aug.augment_data()
+# Use a Pool to parallelize the outermost loop
+with Pool() as p:
+    p.map(run_data_augmentation, [(data_size, p, num_new_docs, aug_method) for data_size in data_size_range for p in p_range for num_new_docs in num_new_docs_range for aug_method in aug_methods])
+
 print("Data augmentation done jihooo!")
