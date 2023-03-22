@@ -16,7 +16,7 @@ class NERParameters():
         self.n_epochs = 25
         self.batch_size = 32
 
-        self.learning_rate = 2e-5
+        self.learning_rate = 3e-5
         self.epsilon = 1e-08
         self.weight_decay = 0.0
 

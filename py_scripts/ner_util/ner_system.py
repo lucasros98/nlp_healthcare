@@ -625,7 +625,7 @@ class SequenceLabeler:
         # Log the results
         if self.logger:
             if unique_labels:
-                self.logger(values={"unique_precision": results["overall_precision"],"unique_recall": results["overall_precision"], "unique_f1": results["overall_precision"]})
+                self.logger(values={"unique_precision": results["overall_precision"],"unique_recall": results["overall_recall"], "unique_f1": results["overall_f1"]})
             else:
                 self.logger(values={"overall_precision": results["overall_precision"],"overall_recall": results["overall_recall"], "overall_f1": results["overall_f1"]})
 
