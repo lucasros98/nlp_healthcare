@@ -14,7 +14,7 @@ import py_scripts.ner_util.evaluation as evaluation
 from parameters import NERParameters
 
 
-def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local_files_only=False,precentage=100,lang='sv',runs=5,aug_params=None):
+def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local_files_only=False,add_prefix_space=False,precentage=100,lang='sv',runs=5,aug_params=None):
 
     #Defining the model
     class Model(nn.Module):
@@ -29,7 +29,7 @@ def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local
             return self.top_layer(res)
 
     #Loading the data
-    X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage)
+    X_train,Y_train,X_val,Y_val,X_test,Y_test = get_training_data(precentage=precentage,lang=lang)
     X_test_unique, Y_test_unique = get_unique_test(lang=lang)
     print(f"Length of the data:\nTrain: {len(X_train)}\nValidation: {len(X_val)}\nTest: {len(X_test)}")
 
@@ -53,7 +53,7 @@ def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local
         params.random_seed = i
         params.run_name = params.run_tag + "_" + str(i)
         #Instantiate the NER system
-        ner_system = ner_util.SequenceLabeler(params, Model, bert_tokenizer=AutoTokenizer.from_pretrained(bert_model,local_files_only=local_files_only))
+        ner_system = ner_util.SequenceLabeler(params, Model, bert_tokenizer=AutoTokenizer.from_pretrained(bert_model,local_files_only=local_files_only,add_prefix_space=add_prefix_space))
 
         #Fit the model
         ner_system.fit(X_train, Y_train, X_val, Y_val)
