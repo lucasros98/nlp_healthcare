@@ -345,8 +345,10 @@ class SequenceLabeler:
         self.verbose = verbose
 
         # Initialize the logger.
-        self.logger = Logger(project=params.model_name, config=vars(params),name=params.run_name)
-
+        if params.logging:
+            self.logger = Logger(project=params.model_name, config=vars(params),name=params.run_name)
+        else:
+            self.logger = None
     # Preprocess the data, build vocabularies and data loaders.
     def preprocess(self, Xtrain, Ytrain, Xval, Yval,tagging_scheme=None):
         # Build vocabularies
@@ -540,7 +542,8 @@ class SequenceLabeler:
         print("Total training steps: {}".format(total_steps))
 
         # Log the total number of training steps
-        self.logger(values={"Total training steps": total_steps})
+        if self.logger:
+            self.logger(values={"Total training steps": total_steps})
 
         #Load the best model
         if p.early_stopping:
@@ -622,7 +625,7 @@ class SequenceLabeler:
         # Log the results
         if self.logger:
             if unique_labels:
-                self.logger(values={"unique_precision": results["overall_precision"],"unique_recall": results["overall_precision"], "unique_f1": results["overall_precision"]})
+                self.logger(values={"unique_precision": results["overall_precision"],"unique_recall": results["overall_recall"], "unique_f1": results["overall_f1"]})
             else:
                 self.logger(values={"overall_precision": results["overall_precision"],"overall_recall": results["overall_recall"], "overall_f1": results["overall_f1"]})
 

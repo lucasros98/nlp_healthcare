@@ -256,7 +256,7 @@ aug_methods = ['random_deletion', 'synonym_replacement', 'shuffle_within_segment
 
 def run_data_augmentation(args):
     data_size, p, num_new_docs, aug_method = args
-    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size, uncased=False)
+    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size)
     data_aug = DataAugmentation(X_train, Y_train, aug_method, binomial_p=p, num_new_docs=num_new_docs, data_size=data_size)
     data_aug.augment_data()
 
@@ -268,7 +268,7 @@ with Pool() as p:
 print("Starting back-translation...")
 # Run back-translation for each data size
 for data_size in data_size_range:
-    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size, uncased=False)
+    X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size)
     data_aug = DataAugmentation(X_train, Y_train, aug_type="back-translation", binomial_p=1, num_new_docs=1, data_size=data_size)
     data_aug.back_translation()
 

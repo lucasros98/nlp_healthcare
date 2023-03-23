@@ -16,7 +16,7 @@ class NERParameters():
         self.n_epochs = 25
         self.batch_size = 32
 
-        self.learning_rate = 2e-5
+        self.learning_rate = 3e-5
         self.epsilon = 1e-08
         self.weight_decay = 0.0
 
@@ -27,6 +27,9 @@ class NERParameters():
         #For linear learning rate decay
         self.lr_decay = True
         self.warmup_steps = 0.1 # Warmup steps (In precentage)
+
+        #Logging parameters (For wandb)
+        self.logging = True
 
         #Augmented
 
