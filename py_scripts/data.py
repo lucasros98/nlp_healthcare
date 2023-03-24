@@ -179,6 +179,52 @@ def create_data_dirs():
     if not os.path.exists(data_path + 'processed'):
         os.makedirs(data_path + 'processed')
 
+
+def get_all_entities(X,Y):
+    """ 
+    Get all entities in the data.
+    Returns a dictionary with the entities as keys and a list of all the labels as values.
+    """
+    entities = {}
+    for i in range(len(Y)):
+        doc = Y[i]
+        inside_entity = False
+        for j in range(len(doc)):
+            #Check if start of entity
+            if Y[i][j] == 'O':
+                if inside_entity:
+                    if entity in entities:
+                        entities[entity].append(label_string)
+                    else:
+                        entities[entity] = [label_string]
+                    inside_entity = False
+            
+            elif Y[i][j][:2] == 'B-':
+                #Check if we are already inside an entity -> then close the current entity
+                if inside_entity:
+                    if entity in entities:
+                        entities[entity].append(label_string)
+                    else:
+                        entities[entity] = [label_string]
+                
+                inside_entity = True
+                entity = Y[i][j][2:]
+                label_string = X[i][j]
+
+            elif Y[i][j][:2] == 'I-':
+                label_string = label_string + " " + X[i][j]
+    
+            #Check if end of document and we are inside an entity
+            if j == len(doc)-1 and inside_entity:
+                if entity in entities:
+                    entities[entity].append(label_string)
+                else:
+                    entities[entity] = [label_string]
+                inside_entity = False
+                label_string = ""
+
+    return entities
+
 def generate_unique_test_data(lang='sv'):
 
     #Get the test and training data
@@ -192,53 +238,20 @@ def generate_unique_test_data(lang='sv'):
         return
 
     #Create blacklist for entities from training data
-    black_list = {}
-    for i in range(len(Y_train)):
-        doc = Y_train[i]
-        inside_entity = False
-        for j in range(len(doc)):
-            #Check if start of entity
-            if Y_train[i][j] == 'O':
-                if inside_entity:
-                    if entity in black_list:
-                        black_list[entity].append(label_string)
-                    else:
-                        black_list[entity] = [label_string]
-                    inside_entity = False
-            
-            elif Y_train[i][j][:2] == 'B-':
-                #Check if we are already inside an entity -> then close the current entity
-                if inside_entity:
-                    if entity in black_list:
-                        black_list[entity].append(label_string)
-                    else:
-                        black_list[entity] = [label_string]
-                
-                inside_entity = True
-                entity = Y_train[i][j][2:]
-                label_string = X_train[i][j]
-
-            elif Y_train[i][j][:2] == 'I-':
-                label_string = label_string + " " + X_train[i][j]
-    
-            #Check if end of document and we are inside an entity
-            if j == len(doc)-1 and inside_entity:
-                if entity in black_list:
-                    black_list[entity].append(label_string)
-                else:
-                    black_list[entity] = [label_string]
-                inside_entity = False
-                label_string = ""
+    black_list = get_all_entities(X_train,Y_train)
 
     #Create the label generator and set the blacklist
     label_gen = LabelGenerator()
+
+    #Remove the common entities present in the blacklist (so that we don't generate them)
     for key in black_list:
         black_list[key] = list(set(black_list[key]))
         label_gen.remove_common_entities(black_list[key],key)
     
     X_new = []
     Y_new = []
-    #Update the test data to only have unique entities
+
+    #Create a new test data with only unique entities
     for i in range(len(Y_test)):
         doc = Y_test[i]
         inside_entity = False

@@ -16,7 +16,7 @@ from data import get_training_data
 #For translation 
 from translation import translate_text_to_eng_batch
 
-for i in [25,50,75,100]:
+for i in [10,25,50,75,100]:
     X_train, Y_train, X_val, Y_val, X_test, Y_test = get_training_data(precentage=i)
 
     X_train_en, Y_train_en = translate_text_to_eng_batch(X_train,Y_train)
