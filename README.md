@@ -12,6 +12,7 @@ The dataset used for this project is the Stockholm EPR PHI Pseudo Corpus.
 The project is structured as follows:
 
 - `data`: contains the data used for training and testing the models
+- `data_public`: contains the public data used for generating new data (data augmentation)
 - `models`: contains the models used for training and testing
 - `notebooks_exploration_cleaning`: contains the notebooks used for data exploration, preprocessing and cleaning
 - `notebooks_models`: contains the notebooks used for training and testing the models
@@ -39,11 +40,21 @@ Then you need to write the following command in the terminal:
 
 This will install the pre-commit hook that will automatically remove all outputs and prints from the notebooks.
 
+### Generating the train, validation and test data
+
+To generate the train, validation and test data, you need to run the setup.py file in the py_scripts folder.
+
+```bash
+    python3 setup.py
+```
+
+This script will generate the train, validation and test data in the data folder. Both for sv and en used for training and testing the models.
+
 ## Models
 
-The models that will be compared in our study are **KB-BERT, M-BERT, SweDeClin-BERT, and Bio-BERT**.
+The models that will be compared in our study are **KB-BERT, M-BERT, SweDeClin-BERT, Bio-BERT and Clinical BERT**.
 
-Additionally, as a simple baseline, we will implement a model that only will predict the most frequently occurring entity of each class.
+Additionally, as two simple baselines. The first model only predicts the most frequently occurring entity of each class, while the second model uses a dictionary to predict entities based on a list of known entities. 
 
 To convert all ipynb to py in models folder, use the following command:
 
