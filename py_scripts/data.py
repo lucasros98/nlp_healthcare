@@ -98,17 +98,18 @@ def get_augmented_data(params=None):
         lists: The augmented data and labels. (X,Y)
     """
     if params is None:
-        params = {'augmentation_type': 'random_deletion', 'p': 0.1, 'num_sentences': 1, 'data_size': 100}
+        params = {'aug_method': 'random_deletion', 'p': 0.1, 'num_new_docs': 1, 'data_size': 100}
 
-    augmentation_type = params['augmentation_type']
-    num_sentences = params['num_sentences']
+    aug_method = params['aug_method']
+    num_new_docs = params['num_new_docs']
     data_size = params['data_size']
     p = params['p']
 
-    file_name = augmentation_type + "_s" + str(num_sentences) + "_p" + str(p) + "_d" + str(data_size) + ".csv"
+    file_name = f"{aug_method}_s{num_new_docs}{'_p' + str(p) if p is not None else ''}_d{int(data_size)}.csv"
 
     X, Y = read_csv_file(file_name, subfolder="augmented")
 
+    print("Data length with " + aug_method + ": " + str(len(X)))
     return X,Y
 
 def append_augmented_data(X, Y, params):
