@@ -27,7 +27,7 @@ for aug_method in aug_methods:
     for p in p_range:
         print(f"Running augmentation method: {aug_method}, p: {p}")
         #Create the params for the augmentation
-        params = {'augmentation_type': aug_method, 'p': p, 'num_sentences': 1, 'data_size': 100}
+        params = {'aug_method': aug_method, 'p': p, 'num_sentences': 1, 'data_size': 100}
 
         #Get the augmented data
         X_aug, Y_aug = get_augmented_data(params=params)
