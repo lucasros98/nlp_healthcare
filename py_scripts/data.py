@@ -102,23 +102,25 @@ def append_augmented_data(X, Y, params):
     """
     _X = copy.deepcopy(X)
     _Y = copy.deepcopy(Y)
-    augmentation_type = params['augmentation_type']
-    num_sentences = params['num_sentences']
+    aug_method = params['aug_method']
+    num_new_docs = params['num_new_docs']
     data_size = params['data_size']
     p = params['p']
 
-    file_name = augmentation_type + "_s" + str(num_sentences) + "_p" + str(p) + "_d" + str(data_size) + ".csv"
+    file_name = aug_method + "_s" + str(num_new_docs) + "_p" + str(p) + "_d" + str(int(data_size)) + ".csv"
 
-    print("Length of training data: " + str(len(_X)))
     X_aug, Y_aug = read_csv_file(file_name, subfolder="augmented")
     if X_aug == None:
-        print("No data found for augmentation type " + augmentation_type + " with parameters " + str(params))
+        print("No data found for " + aug_method + " with parameters " + str(params))
         return _X, _Y
+
     _X = _X + X_aug
     _Y = _Y + Y_aug
-    print("Length of training data after " + augmentation_type + ": " + str(len(_X)))
-    _X, _Y = remove_duplicates(_X, _Y)
-    print("Length of training data after removing duplicates: " + str(len(_X)))
+
+    print("")
+    print("Train after " + aug_method + ": " + str(len(_X)))
+    print("Number of new samples: " + str(len(_X) - len(X)))
+    print("")
     return _X, _Y
 
 def get_training_data(precentage=100, lang='sv', unique_test=False):
