@@ -90,6 +90,27 @@ def get_unique_test(lang='sv'):
     X_test,Y_test = read_csv_file(name_test,subfolder="test")
     return X_test,Y_test
 
+
+def get_augmented_data(params=None):
+    """Get the augmented data.
+    
+    Returns:
+        lists: The augmented data and labels. (X,Y)
+    """
+    if params is None:
+        params = {'augmentation_type': 'random_deletion', 'p': 0.1, 'num_sentences': 1, 'data_size': 100}
+
+    augmentation_type = params['augmentation_type']
+    num_sentences = params['num_sentences']
+    data_size = params['data_size']
+    p = params['p']
+
+    file_name = augmentation_type + "_s" + str(num_sentences) + "_p" + str(p) + "_d" + str(data_size) + ".csv"
+
+    X, Y = read_csv_file(file_name, subfolder="augmented")
+
+    return X,Y
+
 def append_augmented_data(X, Y, params):
     """Append augmented data to training data sets X and Y.
     

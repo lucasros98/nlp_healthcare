@@ -78,6 +78,24 @@ def create_dir(path):
         print("Creating a new dir for saving results..")
         os.makedirs(path, exist_ok=True)
 
+def save_results(subfolder,filename,result):
+    result_dir = os.environ.get("RESULT_DIR")
+    if result_dir is None:
+        print("Please set the RESULT_DIR environment variable.")
+        return 
+    
+    path = os.path.join(result_dir, subfolder)
+    create_dir(path)
+    filepath = os.path.join(path, filename)
+
+    try:
+        if not result.empty:
+            #save to file using csv writer
+            result.to_csv(filepath, index=False)
+            
+    except Exception as e:
+         print(f"Error occurred while creating CSV file: {e}. Please check the RESULT_DIR environment variable and file name.")
+
 def save_result_file(subfolder, filename, result):
     result_dir = os.environ.get("RESULT_DIR")
     if result_dir is None:

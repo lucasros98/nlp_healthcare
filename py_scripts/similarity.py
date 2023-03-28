@@ -194,7 +194,37 @@ def print_dataset_similarity_scores(metric='all'):
             filename = f'similarity_scores_{dataset}_data_{percentage}.csv'
             save_result_file('similarity', filename, results)
 
-#print_dataset_similarity_scores(metric='all')
+
+def compare_dataset(X1,X2,metrics=["cosine","bleu","euclidean"]):
+    #Check that the two datasets have the same length
+    if len(X1) != len(X2):
+        raise ValueError("The two datasets have different lengths")
+
+    scores = []
+
+    for i in range(len(X1)):
+        #Get the current two sentences
+        x1 = X1[i]
+        x2 = X2[i]
+
+        #Calculate the similarity scores for the two sentences
+        score = {}
+
+        if  'cosine' in metrics:
+            cos_sim_score = calculate_cosine_similarity([x1], [x2])
+            cos_sim_score = cos_sim_score[0]
+            score['cosine'] = cos_sim_score
+        if 'bleu' in metrics:
+            bleu_score = nltk.translate.bleu_score.sentence_bleu([x1], x2, weights=(1, 0, 0, 0))
+            score['bleu'] = bleu_score
+        if 'euclidean' in metrics:
+            euclidean_score = euclidean_distance(x1, x2)
+            score['euclidean'] = euclidean_score
+        
+        scores.append(score)
+        
+    return scores
+    
 
 def generate_scores_per_sentence(metric='all'):
     percentages = [25, 50, 75, 100]
@@ -220,7 +250,6 @@ def generate_scores_per_sentence(metric='all'):
         filename = f'per_sentence_similarity_scores_{percentage}.csv'
         save_result_file('similarity', filename, results)
 
-generate_scores_per_sentence(metric='all')
 
 #Not used atm
 def jaccard_similarity(doc1, doc2):
