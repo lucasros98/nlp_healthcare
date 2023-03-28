@@ -72,26 +72,35 @@ generate_unique_test_data(lang='sv')
 
 print("Creating english data...")
 
+#Parameters for translation models
+class TranslationParameters():
+    num_beams=4
+    early_stopping=True
+    max_length=512
+    use_decoded=True
+
+translations_params = TranslationParameters()
+
 #Create english data
-X_train_en, Y_train_en = translate_text_to_eng_batch(X_train,Y_train)
+X_train_en, Y_train_en = translate_text_to_eng_batch(X_train,Y_train,params=translations_params)
 write_csv_file(filename="train_en_100",X=X_train_en,Y=Y_train_en,subfolder="train")
 
-X_val_en, Y_val_en = translate_text_to_eng_batch(X_val,Y_val)
+X_val_en, Y_val_en = translate_text_to_eng_batch(X_val,Y_val,params=translations_params)
 write_csv_file(filename="val_en",X=X_val_en,Y=Y_val_en,subfolder="val")
 
-X_test_en, Y_test_en = translate_text_to_eng_batch(X_test,Y_test)
+X_test_en, Y_test_en = translate_text_to_eng_batch(X_test,Y_test,params=translations_params)
 write_csv_file(filename="test_en",X=X_test_en,Y=Y_test_en,subfolder="test")
 
-X_train_en_10, Y_train_en_10 = translate_text_to_eng_batch(X_train_10,Y_train_10)
+X_train_en_10, Y_train_en_10 = translate_text_to_eng_batch(X_train_10,Y_train_10,params=translations_params)
 write_csv_file(filename="train_en_10",X=X_train_en_10,Y=Y_train_en_10,subfolder="train")
 
-X_train_en_25, Y_train_en_25 = translate_text_to_eng_batch(X_train_25,Y_train_25)
+X_train_en_25, Y_train_en_25 = translate_text_to_eng_batch(X_train_25,Y_train_25,params=translations_params)
 write_csv_file(filename="train_en_25",X=X_train_en_25,Y=Y_train_en_25,subfolder="train")
 
-X_train_en_50, Y_train_en_50 = translate_text_to_eng_batch(X_train_50,Y_train_50)
+X_train_en_50, Y_train_en_50 = translate_text_to_eng_batch(X_train_50,Y_train_50,params=translations_params)
 write_csv_file(filename="train_en_50",X=X_train_en_50,Y=Y_train_en_50,subfolder="train")
 
-X_train_en_75, Y_train_en_75 = translate_text_to_eng_batch(X_train_75,Y_train_75)
+X_train_en_75, Y_train_en_75 = translate_text_to_eng_batch(X_train_75,Y_train_75,params=translations_params)
 write_csv_file(filename="train_en_75",X=X_train_en_75,Y=Y_train_en_75,subfolder="train")
 
 generate_unique_test_data(lang="en")
