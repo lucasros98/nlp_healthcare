@@ -15,17 +15,32 @@ load_dotenv(find_dotenv())
 PATH = os.getenv('DATA_PATH')
 
 
+class TranslationParameters():
+    num_beams=4
+    early_stopping=True
+    max_length=512
+    use_decoded=True
+    num_sentences=1
+
 class DataAugmentation():
     def __init__(self):
         self.generator = LabelGenerator()
 
-
     # Translate the whole dataset to english and back to swedish
-    def back_translation(self, X, Y):
+    def back_translation(self, X, Y, num_sentences=1):
+        # Parameters for translation models
+        params = TranslationParameters()
+
         _X = copy.deepcopy(X)
         _Y = copy.deepcopy(Y)
-        X_new, Y_new = translate_text_to_eng_batch(_X, _Y)
-        X_new, Y_new = translate_text_to_swe_batch(X_new,Y_new)
+
+        # Translate to english
+        params.num_sentences = 1
+        X_new, Y_new = translate_text_to_eng_batch(_X, _Y, params=params)
+
+        # Translate back to swedish
+        params.num_sentences = num_sentences # number of sentences to generate for each sentence
+        X_new, Y_new = translate_text_to_swe_batch(X_new,Y_new,params=params)
         return X_new, Y_new
 
 

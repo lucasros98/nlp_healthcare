@@ -22,6 +22,7 @@ class TranslationParameters():
     early_stopping=True
     max_length=512
     use_decoded=True
+    num_sentences=1
 
 translations_params = TranslationParameters()
 

@@ -31,7 +31,8 @@ class TranslationParameters():
     num_beams=4
     early_stopping=True
     max_length=512
-    use_decoded=False
+    use_decoded=True
+    num_sentences=1 #Used for data augmentation
 
 #Translate Swedish text data into English by using 
 def translate_text_to_eng(X,Y,params=TranslationParameters()):
@@ -41,7 +42,7 @@ def translate_text_to_eng(X,Y,params=TranslationParameters()):
     model_en.to(device)
     X_masked = tokenize_en(X_masked, return_tensors="pt",padding=True).to(device)
 
-    X_translated = model_en.generate(**X_masked, num_beams=params.num_beams, max_length=params.max_length, early_stopping=params.early_stopping).to("cpu")
+    X_translated = model_en.generate(**X_masked, num_beams=params.num_beams, max_length=params.max_length, early_stopping=params.early_stopping, num_return_sequences=params.num_sentences).to("cpu")
 
     X_translated = tokenize_en.batch_decode(X_translated, skip_special_tokens=True)
 
@@ -72,7 +73,7 @@ def translate_text_to_swe(X,Y,params=TranslationParameters()):
     model_swe.to(device)
     X_masked = tokenize_swe(X_masked, return_tensors="pt",padding=True).to(device)
 
-    X_translated = model_swe.generate(**X_masked, num_beams=params.num_beams, max_length=params.max_length, early_stopping=params.early_stopping).to("cpu")
+    X_translated = model_swe.generate(**X_masked, num_beams=params.num_beams, max_length=params.max_length, early_stopping=params.early_stopping, num_return_sequences=params.num_sentences).to("cpu")
 
     X_translated = tokenize_swe.batch_decode(X_translated, skip_special_tokens=True)
 
