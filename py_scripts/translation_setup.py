@@ -23,6 +23,7 @@ class TranslationParameters():
     max_length=512
     use_decoded=True
     num_sentences=1
+    type='s4s'
 
 translations_params = TranslationParameters()
 

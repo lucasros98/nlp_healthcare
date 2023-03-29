@@ -33,6 +33,7 @@ class TranslationParameters():
     max_length=512
     use_decoded=True
     num_sentences=1 #Used for data augmentation
+    type='s4s'
 
 #Translate Swedish text data into English by using 
 def translate_text_to_eng(X,Y,params=TranslationParameters()):
@@ -95,6 +96,86 @@ def translate_text_to_swe(X,Y,params=TranslationParameters()):
     X_new, Y_new = unmask_entities(X_translated, mapping)
     
     return X_new, Y_new
+
+
+#Translate Swedish text data into English by using Word for Word translation
+def translate_text_to_eng_w4w(X,Y,params=TranslationParameters()):
+    params.num_beams = 1 #W4W does not work with num_beams > 1
+
+    X_new = []
+    Y_new = []
+    for i in range(len(X)):
+        curr_x = X[i]
+        curr_y = Y[i]
+        x_masked = tokenize_en(curr_x, return_tensors="pt",padding=True).to(device)
+
+        x_translated = model_en.generate(**x_masked, num_beams=params.num_beams, max_length=params.max_length, early_stopping=params.early_stopping, num_return_sequences=params.num_sentences).to("cpu")
+
+        x_translated = tokenize_en.batch_decode(x_translated, skip_special_tokens=True)
+
+        #Align the translated text if a word has been translated to multiple words
+        x_new, y_new  = align_text(x_translated, curr_y)
+
+        X_new.append(x_new)
+        Y_new.append(y_new)
+
+    return X_new, Y_new
+
+#Translate Swedish text data into English by using Word for Word translation
+def translate_text_to_swe_w4w(X,Y,params=TranslationParameters()):
+    params.num_beams = 1 #W4W does not work with num_beams > 1
+
+    X_new = []
+    Y_new = []
+
+    for i in range(len(X)):
+        curr_x = X[i]
+        curr_y = Y[i]
+        x_masked = tokenize_swe(curr_x, return_tensors="pt",padding=True).to(device)
+
+        x_translated = model_swe.generate(**x_masked, num_beams=params.num_beams, max_length=params.max_length, early_stopping=params.early_stopping, num_return_sequences=params.num_sentences).to("cpu")
+
+        x_translated = tokenize_swe.batch_decode(x_translated, skip_special_tokens=True)
+
+        #Align the translated text if a word has been translated to multiple words
+        x_new, y_new  = align_text(x_translated, curr_y)
+
+        X_new.append(x_new)
+        Y_new.append(y_new)
+
+    return X_new, Y_new
+
+            
+def align_text(x, y):
+    x_new = []
+    y_new = []
+
+    for i in range(len(x)):
+        word_x = x[i]
+        word_y = y[i]
+
+        words = word_x.split(" ")
+
+        if(len(words) == 1):
+            x_new.append(word_x)
+            y_new.append(word_y)
+        else:
+            #get the current label
+            label = word_y
+
+            for word in words:
+                x_new.append(word)
+
+                if(label == "O"):
+                    #just append O
+                    y_new.append(label)
+                elif(label[0] == "I"):
+                    y_new.append("I-" + label[2:])
+                else:
+                    #append B-<label>
+                    y_new.append("B-" + label[2:])
+                    label = "I-" + label[2:]
+    return x_new, y_new
 
 
 def unmask_entities(X_translated, mapping):
@@ -180,6 +261,10 @@ def translate_text_to_eng_batch(X,Y,params=TranslationParameters(),batch_size=64
     if params.use_decoded:
        X,Y = decode_abbrevs(X,Y)
 
+    #Override the type if it is not set
+    if params.type is None:
+        params.type = 's4s'
+
     X_res, Y_res = [],[]
     print("Starting to process batches...")
     for i in tqdm(range(0,len(X),batch_size)):
@@ -187,7 +272,10 @@ def translate_text_to_eng_batch(X,Y,params=TranslationParameters(),batch_size=64
         Y_batch = Y[i:i+batch_size]
 
         #Translate the batch
-        X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch,params=params)
+        if params.type == 'w4w':
+            X_translated, Y_translated = translate_text_to_eng_w4w(X_batch,Y_batch,params=params)
+        else:
+            X_translated, Y_translated = translate_text_to_eng(X_batch,Y_batch,params=params)
 
         #Append the results
         X_res += X_translated
@@ -199,7 +287,9 @@ def translate_text_to_eng_batch(X,Y,params=TranslationParameters(),batch_size=64
     return X_res,Y_res
 
 def translate_text_to_swe_batch(X,Y,params=TranslationParameters(),batch_size=64):
-    #Decode clincal abbreviations
+    #Override the type if it is not set
+    if params.type is None:
+        params.type = 's4s'
 
     X_res, Y_res = [],[]
     print("Starting to process batches...")
@@ -208,7 +298,10 @@ def translate_text_to_swe_batch(X,Y,params=TranslationParameters(),batch_size=64
         Y_batch = Y[i:i+batch_size]
 
         #Translate the batch
-        X_translated, Y_translated = translate_text_to_swe(X_batch,Y_batch,params=params)
+        if params.type == 'w4w':
+            X_translated, Y_translated = translate_text_to_swe_w4w(X_batch,Y_batch,params=params)
+        else:
+            X_translated, Y_translated = translate_text_to_swe(X_batch,Y_batch,params=params)
 
         #Append the results
         X_res += X_translated

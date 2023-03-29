@@ -2,8 +2,8 @@
 
 ## Meeting notes (29/3) - Todo
 
-- Fix backtranslation for multiple sentences
-  - Implement Word for word translation
+- Fix backtranslation for multiple sentences (DONE)
+  - Implement Word for word translation (DONE)
 - Fix unique test set
 - Similarity metrics - Varför presterar den här metoden bra?
 - Code refactiong
