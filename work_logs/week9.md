@@ -4,7 +4,7 @@
 
 - Fix backtranslation for multiple sentences (DONE)
   - Implement Word for word translation (DONE)
-- Fix unique test set
+- Fix unique test set (DONE)
 - Similarity metrics - Varför presterar den här metoden bra?
 - Code refactiong
 
