@@ -4,6 +4,7 @@ import sys
 from tqdm import tqdm
 import torch
 import os
+import random
 
 #Load MarianMT models from HuggingFace
 model_name_swe_to_en = 'Helsinki-NLP/opus-mt-sv-en'
@@ -100,7 +101,6 @@ def translate_text_to_swe(X,Y,params=TranslationParameters()):
 
 #Translate Swedish text data into English by using Word for Word translation
 def translate_text_to_eng_w4w(X,Y,params=TranslationParameters()):
-    params.num_beams = 1 #W4W does not work with num_beams > 1
 
     X_new = []
     Y_new = []
@@ -113,17 +113,18 @@ def translate_text_to_eng_w4w(X,Y,params=TranslationParameters()):
 
         x_translated = tokenize_en.batch_decode(x_translated, skip_special_tokens=True)
 
-        #Align the translated text if a word has been translated to multiple words
-        x_new, y_new  = align_text(x_translated, curr_y)
+        # if we generates more than one word we need to extract the different variants
+        x_translated = align_sentences_w4w(x_translated, params.num_sentences)
 
-        X_new.append(x_new)
-        Y_new.append(y_new)
+        for j in range(len(x_translated)):
+            x_new, y_new  = align_text(x_translated[j], curr_y)
+            X_new.append(x_new)
+            Y_new.append(y_new)
 
     return X_new, Y_new
 
 #Translate Swedish text data into English by using Word for Word translation
 def translate_text_to_swe_w4w(X,Y,params=TranslationParameters()):
-    params.num_beams = 1 #W4W does not work with num_beams > 1
 
     X_new = []
     Y_new = []
@@ -137,13 +138,46 @@ def translate_text_to_swe_w4w(X,Y,params=TranslationParameters()):
 
         x_translated = tokenize_swe.batch_decode(x_translated, skip_special_tokens=True)
 
-        #Align the translated text if a word has been translated to multiple words
-        x_new, y_new  = align_text(x_translated, curr_y)
+        # if we generates more than one word we need to extract the different variants
+        x_translated = align_sentences_w4w(x_translated, params.num_sentences)
 
-        X_new.append(x_new)
-        Y_new.append(y_new)
+        for j in range(len(x_translated)):
+            x_new, y_new  = align_text(x_translated[j], curr_y)
+            X_new.append(x_new)
+            Y_new.append(y_new)
 
     return X_new, Y_new
+
+def align_sentences_w4w(x, num_sentences, randomize=True, prob_first=0.5):
+
+    if num_sentences == 1:
+        return [x]
+
+    decoded = []
+    for j in range(num_sentences):
+        # get all the words that have a index of % j
+        curr = [x for i, x in enumerate(x) if i % num_sentences == j]
+        decoded.append(curr)
+
+    if not randomize:
+        return decoded
+
+    results = []
+    for j in range(num_sentences):
+        curr = []
+        # generate a new sentence by combining the words
+        for k in range(len(decoded[j])):
+            #make it a higher chance to pick the first sentence as it is the most likely
+            if random.random() > prob_first:
+                rand = 0
+            else:
+                rand = random.randint(1, num_sentences - 1)
+            print(rand)
+            curr.append(decoded[rand][k])
+
+        results.append(curr)
+            
+    return results
 
             
 def align_text(x, y):

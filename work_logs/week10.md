@@ -4,7 +4,7 @@
 ## Todo this week
 
 - Run all the augmentation experiments.
-- Fixa bug i word to word translation.
+- Fixa bug i word to word translation. (DONE)
 - Similarity metrics - Varför presterar den här metoden bra?
 - Code refactoring
 
