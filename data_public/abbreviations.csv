@@ -5,7 +5,6 @@ fr;från
 ef;Ejektionsfraktionen
 im;Intramuskulär
 pk;protrombinkomplex
-pat;patient
 beh;behandlas
 alt;alternativt
 uvi;Urinvägsinfektion
@@ -43,7 +42,6 @@ hv;huvudvärk
 hö;höger
 IBD;inflammatorisk tarmsjukdom
 inf;infektion
-inf;inferior
 intox;intoxikation
 KAD;kvarliggande urinkateter
 lat;laterala
@@ -58,7 +56,8 @@ OR;oregelbunden rytm
 pal;patientansvarig läkare
 palp;palpation
 pas;patientansvarig sjuksköterska
-pat;patient
+pat;patienten
+pats;patientens
 pbd;preliminär bedömning
 pulm;lungor
 pv;primärvård
@@ -72,7 +71,6 @@ STEMI;ST-höjningsinfarkt
 temp;temperatur
 ua;utan anmärkning
 UL;ultraljud
-ul;underläkare
 us;undersökning
 us;utskrivningssamtal
 uska;undersköterska
@@ -113,9 +111,7 @@ SVF;Standardiserade vårdförlopp
 Absc;Abscess
 Amn;Amnionvätska
 Asc;Ascites
-B;Blod
 BAL;Bronkoalveolärt lavage
-Bal;Bronkoalveolärt lavage
 BM;Benmärg
 Bronk;Bronkialsekret
 CAPD;Peritonealdialysvätska
@@ -128,12 +124,10 @@ Dia;Dialysvätska
 Drän sp;Drän spets
 Drän vtsk;Drän vätska
 Erc;Erytrocyter
-F;Feces
 F färsk;Feces färskprov
 Fib;Fibroblaster
 Fo vtn;Fostervatten 
 Hudskr;Hudskrap
-Instick;Kateter infart
 Konj;Konjunktivalsekret
 Kärl sp;Kärlkateterspets
 Ledv;Ledvätska
@@ -142,16 +136,14 @@ Lyc;Lymfocyter
 Nf;Nasofarynx, sekret
 Nf asp;Nasofarynx, aspirat
 Näs;Näsa
-P;Plasma
 PD-vätska;Peritonealdialysvätska
 Peric;Pericardvätska
 Perin;Perineum
 Plac;Placenta
 Pleura;Pleuravätska
 Ple;Pleuravätska
-Pt;Patient
+Pt;Patienten
 Rekt;Rektum
-S;Serum
 Sekr;Sekret
 Sput;Sputum
 Sput CF;Sputum, cystisk fibros
@@ -160,13 +152,11 @@ Tejp;Tejpprov
 Trak;Trakelasekret
 Trc;Trombocyter
 Ual;Utandningsluft
-U;Urin
 U KAD;Urin, kateter
 Ur;Uretra
 Vag;Vaginalsekret
 VagU;Vaginalsekret i Urin
 Vsk;Ventrikelsköljvätska
-V;Vävnad/Biopsi
 Övr;Övrigt
 ADR;Alkohol- och drogrådgivningen
 AML;Arbetsmiljölagen
@@ -201,3 +191,6 @@ tkr;tycker
 ibl;ibland
 tpn;total parenteral nutrition
 ggr;gånger
+lgh;lägenhet
+fm;förmiddag
+em;eftermiddag
