@@ -104,6 +104,8 @@ def translate_text_to_eng_w4w(X,Y,params=TranslationParameters()):
 
     X_new = []
     Y_new = []
+    model_en.to(device)
+
     for i in range(len(X)):
         curr_x = X[i]
         curr_y = Y[i]
@@ -128,6 +130,7 @@ def translate_text_to_swe_w4w(X,Y,params=TranslationParameters()):
 
     X_new = []
     Y_new = []
+    model_swe.to(device)
 
     for i in range(len(X)):
         curr_x = X[i]
