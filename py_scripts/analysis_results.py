@@ -40,24 +40,30 @@ def load_data():
         print("Please set the RESULT_DIR environment variable.")
         return 
     
-    path = os.path.join(result_dir, "results_augmented")
+    path = os.path.join(result_dir, "results_augmented_50")
 
-    results = []
+    unique_res = []
+    standard_res = []
     for filename in os.listdir(path):
         if filename.endswith(".csv"):
-            results.append(load_csv_file(os.path.join(path, filename)))
-
-    return results
+            unique, standard = load_csv_file(os.path.join(path, filename))
+            unique_res.append(unique)
+            standard_res.append(standard)
+    return unique_res, standard_res
 
 def load_csv_file(filename):
     try:
         data = pd.read_csv(filename)
         
         #convert the data to a list for f1 column
-        data = data['f1'].tolist()
-        return data
+        unique = data['unique'].tolist()
+        standard = data['standard'].tolist()
+        return unique, standard
     except Exception as e:
         print(f"Error occurred while loading CSV file: {e}. Please check the RESULT_DIR environment variable and file name.")
 
 
-print(significance_test(load_data()))
+unique, standard = load_data()
+print("Unique: ",significance_test(unique))
+print("Standard: ",significance_test(standard))
+
