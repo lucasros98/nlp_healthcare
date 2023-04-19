@@ -5,8 +5,8 @@
 
 
 Introduction:
-- Göra klart Introduction
-- Improve Problem Statement
+- Göra klart Introduction *done*
+- Improve Problem Statement *done*
 
 Related Work:
 - Lägga till mer om NER
@@ -19,4 +19,5 @@ Resultat:
 - Standardavikelse på resultaten
 
 - Seperat graf på procent och antal meningar
+    - ändrade till antal meningar i resultat tabeller *done*
 - Lägga in graf över entities och dess prestanda
