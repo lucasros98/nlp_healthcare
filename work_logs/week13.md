@@ -6,10 +6,10 @@
 
 ### Theory
 
-- 3.3 Pre-trained models
+- 3.3 Pre-trained models - Lucas
 - 3.7 Metrics
-- Lägga till
-  - Sentence-based BERT
+  - Lägga till
+    - Sentence-based BERT
 
 Läsa igenom, förbättra grammar!
 
@@ -19,12 +19,13 @@ Läsa igenom, förbättra grammar!
 Byta till dåtid!
 
 - 4.1.1 Data (Ta upp med handledare)
-- 4.2 Image - Förbättra
-- Uppdatera titlar i 4.2 till mer relevanta
-- 4.3 Utveckla
-- 4.5 Data augmentation - förbättra mycket
-- 4.6 Evaluation - förbättra, hänvisa till metrics
+- 4.2 Image - Förbättra  - Lucas
+- Uppdatera titlar i 4.2 till mer relevanta  - Lucas
+- 4.3 Utveckla  - Lucas
+- 4.5 Data augmentation - förbättra mycket - Niklas
+- 4.6 Evaluation - förbättra, hänvisa till metrics - Lucas
 
+Läsa igenom metod - Båda
 
 ### Results
 
