@@ -82,7 +82,7 @@ for data_size in aug_params.data_size_range:
                 print_augmentation_results({"aug_method": "back_translation", "num_new_docs": num_new_docs, "data_size": data_size})
        
         elif "bert_masking" == aug_method:
-            bert_mask = pipeline('fill-mask', model='KB/bert-base-swedish-cased',topk=10)
+            bert_mask = pipeline('fill-mask', model='KB/bert-base-swedish-cased')
 
             for num_new_docs in aug_params.num_new_docs_range:
                 for p in aug_params.p_range:
