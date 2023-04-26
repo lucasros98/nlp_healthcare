@@ -2,6 +2,7 @@ import os
 import sys
 import string
 from dotenv import load_dotenv,find_dotenv
+from transformers import pipeline
 from multiprocessing import Pool
 from tqdm import tqdm
 from data import get_all_entities
@@ -91,6 +92,8 @@ def augment_data(args):
             elif aug_method == "label_wise_token_replacement":
                 label_dict = data_aug.create_label_dict(X_train, Y_train)
                 X_tmp, Y_tmp = data_aug.label_wise_token_replacement(tokens, labels, p, label_dict)  
+
+
             X_new.append(X_tmp)
             Y_new.append(Y_tmp)
 
@@ -114,6 +117,28 @@ for data_size in aug_params.data_size_range:
                 }
 
                 write_data(params_dict, X_new, Y_new)
+
+        elif "bert_masking" == aug_method:
+            X_train, Y_train = get_data(data_size)
+            bert_mask = pipeline('fill-mask', model='KB/bert-base-swedish-cased')
+
+            for num_new_docs in aug_params.num_new_docs_range:
+                for p in aug_params.p_range:
+                    X_new, Y_new = [], []
+
+                    for tokens, labels in tqdm(zip(X_train, Y_train)):
+                        for i in range(num_new_docs):
+                            X_tmp, Y_tmp = data_aug.bert_masking_single(tokens, labels, p, bert_mask=bert_mask)
+                            X_new.append(X_tmp)
+                            Y_new.append(Y_tmp)
+
+                    params_dict = {
+                        'aug_method': aug_method,
+                        'num_new_docs': num_new_docs,
+                        'data_size': data_size,
+                        'p': p
+                    }
+                    write_data(params_dict, X_new, Y_new)
         
         else:
             # Run each specified aug method (exepct back_translation) for each data size, p and number of new documents

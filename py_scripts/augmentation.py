@@ -294,3 +294,119 @@ class DataAugmentation():
                 X_new.append(token)
                 Y_new.append(label)
         return X_new, Y_new
+
+    def bert_masking(self, X, Y, p, bert_mask):
+        X_new = []
+        Y_new = []
+
+        dist = random.binomial(n=1, p=p, size=len(X))
+
+        for token, label, prob in zip(X, Y, dist):
+            if prob == 1 and label == 'O':
+                X_new.append('[MASK]')
+                Y_new.append(label)
+            else:
+                X_new.append(token)
+                Y_new.append(label)
+        
+        #check if x contains [MASK]
+        if '[MASK]' not in X_new:
+            return X_new, Y_new
+             
+        else:
+            text = ' '.join(X_new)
+
+            predictions = bert_mask(text)
+
+            for item in predictions:
+                if isinstance(item, dict):  # If item is a dictionary
+                    word = process_prediction(item)
+                    if word is not None:
+                        text = text.replace('[MASK]', word, 1)
+                        break
+                elif isinstance(item, list):  # If item is a list
+                    chosen = False
+                    for prediction in item:
+                        word = process_prediction(prediction)
+
+                        if word is not None and word not in ["-", "",":",",","."]:
+                            chosen = True
+                            text = text.replace('[MASK]', word, 1)
+                            break
+
+                    if not chosen:
+                        #Choose first prediction
+                        word = process_prediction(item[0])
+                        text = text.replace('[MASK]', word, 1)
+                            
+        
+            X_new = text.split(" ")
+
+            # Remove empty string tokens from X_new and the corresponding labels from Y_new
+            for i in reversed(range(len(X_new))):
+                if X_new[i] in ["", "'", "\""]:
+                    X_new.pop(i)
+                    Y_new.pop(i)
+            
+        return X_new, Y_new
+
+    #mask one single word at a time if it chosen to be masked
+    def bert_masking_single(self, X, Y, p, bert_mask):
+        X_new = copy.deepcopy(X)
+        Y_new = copy.deepcopy(Y)
+
+        dist = random.binomial(n=1, p=p, size=len(X))
+
+        for i in reversed(range(len(X))):
+            token, label, prob = X[i], Y[i], dist[i]
+            if prob == 1 and label == 'O':
+                X_masked = copy.deepcopy(X)
+                X_masked[i] = '[MASK]'
+                text = ' '.join(X_masked)
+
+                predictions = bert_mask(text)
+
+                for item in predictions:
+                    if isinstance(item, dict):
+                        word = process_prediction(item)
+                        if word is not None:
+                            X_new[i] = word
+                            break
+                    elif isinstance(item, list):
+                        chosen = False
+                        for prediction in item:
+                            word = process_prediction(prediction)
+
+                            if word is not None and word not in ["-", "", ":", ",", "."]:
+                                chosen = True
+                                X_new[i] = word
+                                break
+
+                        if not chosen:
+                            word = process_prediction(item[0])
+                            X_new[i] = word
+
+                # Check if the predicted word starts with '##'
+                if X_new[i].startswith('##') and i > 0:
+                    X_new[i] = X_new[i].replace('##', '')
+                    X_new[i - 1] = X_new[i - 1] + X_new[i]
+                    X_new.pop(i)
+                    Y_new.pop(i)
+                
+                # Remove empty string tokens from X_new and the corresponding labels from Y_new
+                if X_new[i] in ["''", '""', "\""]:
+                    X_new.pop(i)
+                    Y_new.pop(i)
+        return X_new, Y_new
+
+
+#Helper function for BERT masking
+def process_prediction(prediction):
+    try:
+        token_str = prediction["token_str"]
+        if token_str is not None:
+            word = prediction["token_str"]
+            return word
+    except KeyError as e:
+        print(f"KeyError occurred: {e}")
+    return None

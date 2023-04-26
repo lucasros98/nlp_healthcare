@@ -38,12 +38,14 @@ from py_scripts.data import get_training_data
 
 
 #Create a dictionary/mapping of the labels from the training data
-def create_mapping(X_train, Y_train):
+def create_mapping(X_train, Y_train,print_duplicates=False):
     mapping = {}
 
     for i in range(len(X_train)):
         for j in range(len(X_train[i])):
             if Y_train[i][j] != 'O':
+                if X_train[i][j] in mapping and mapping[X_train[i][j]] != Y_train[i][j] and print_duplicates:
+                    print("Duplicate word in training data: ", X_train[i][j], " with label: ", Y_train[i][j], " and ", mapping[X_train[i][j]])
                 #map the word to the label
                 mapping[X_train[i][j]] = Y_train[i][j]
     
