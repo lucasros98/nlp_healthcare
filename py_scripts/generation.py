@@ -198,7 +198,15 @@ class LabelGenerator:
         return random_date.strftime(dateformat)
 
     def generate_datepart(self, dateformat="%d/%m"):
-        return self.generate_date(dateformat)
+        blacklisted_dates = self.get_blacklist('Date_Part')
+        date = self.generate_date(dateformat)
+
+        max_tries = self.max_tries
+        while date in blacklisted_dates and max_tries > 0:
+            date = self.generate_date(dateformat)
+            max_tries -= 1
+
+        return date
 
     def generate_firstname(self,gender=None):
         if gender == "man":

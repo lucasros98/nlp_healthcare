@@ -4,7 +4,6 @@ import torch
 from collections import Counter
 from data import get_training_data
 from sentence_transformers import SentenceTransformer, util
-from tqdm import tqdm
 import nltk
 import pandas as pd
 import os
@@ -22,7 +21,6 @@ def calculate_cosine_similarity(docs1, docs2, mode='mean'):
     docs1 = convert_to_string_list(docs1)
     docs2 = convert_to_string_list(docs2)
 
-    print('Encoding docs for cosine similarity')
     embedding_1 = model.encode(docs1, convert_to_tensor=True, show_progress_bar=True, device='cuda')
     embedding_2 = model.encode(docs2, convert_to_tensor=True, show_progress_bar=True, device='cuda')
 
@@ -30,7 +28,7 @@ def calculate_cosine_similarity(docs1, docs2, mode='mean'):
     max_scores = []
     min_scores = []
     batch_size = 64
-    for emb1 in tqdm(embedding_1, desc='Calculate cosine similarity'):
+    for emb1 in embedding_1:
         temp_scores = torch.tensor([]).to('cuda')
         temp_max_score = 0
         temp_min_score = 1
@@ -124,7 +122,7 @@ def calculate_bleu_or_euclidean(docs1, docs2, method):
     total_scores = []
     max_scores = []
     min_scores = []
-    for doc1 in tqdm(docs1, desc=f'Calculating {method} Score'):
+    for doc1 in docs1:
         temp_scores = []
         temp_max_score = 0
         temp_min_score = 1

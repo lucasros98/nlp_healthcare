@@ -7,14 +7,34 @@ sys.path.append(os.path.dirname(find_dotenv()))
 load_dotenv(find_dotenv())
 
 from transformers import AutoTokenizer, AutoModel
-from py_scripts.file_handler import save_result_file
-from py_scripts.data import get_training_data, get_unique_test
+from py_scripts.file_handler import save_result_file, read_csv_file
+from py_scripts.data import get_training_data, get_unique_test, build_file_name, get_augmented_data
 import py_scripts.ner_util.ner_system as ner_util
 import py_scripts.ner_util.evaluation as evaluation
 from parameters import NERParameters
 
 
-def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local_files_only=False,add_prefix_space=False,precentage=100,lang='sv',runs=5,aug_params=None):
+def build_params_list(combinations):
+    results = {}
+    for comb in combinations:
+        #loop of keys and values
+        for key, value in comb.items():
+            if key not in results:
+                results[key] = []
+            results[key].append(str(value))
+
+    #remove all duplicates -> set variable if only one value
+    aug_params = {}
+    aug_params['aug_method'] = list(set(results['aug_method'])) if len(set(results['aug_method'])) > 1 else results['aug_method'][0]
+    aug_params['p'] = list(set(results['p'])) if len(set(results['p'])) > 1 else results['p'][0]
+    aug_params['num_new_docs'] = list(set(results['num_new_docs'])) if len(set(results['num_new_docs'])) > 1 else results['num_new_docs'][0]
+    aug_params['data_size'] = list(set(results['data_size'])) if len(set(results['data_size'])) > 1 else results['data_size'][0]
+    aug_params['bt_type'] = list(set(results['bt_type'])) if len(set(results['bt_type'])) > 1 else results['bt_type'][0]
+    
+    return aug_params
+
+
+def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local_files_only=False,add_prefix_space=False,precentage=100,lang='sv',runs=5,aug_params_list=None, aug_combination=''):
 
     #Defining the model
     class Model(nn.Module):
@@ -44,11 +64,22 @@ def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local
     params.data_size = precentage
     params.run_tag = str(int(precentage)) + "_normal" 
 
-    if aug_params is not None:
-        params.run_tag = str(int(precentage)) + "_augmented"
-        params.aug_params = aug_params
+    aug_run_tag = ""
+    if aug_params_list is not None:
+        for aug_params in aug_params_list:
+            file_name = build_file_name(**aug_params)
+            aug_run_tag += file_name + "_"
 
-    #Run the model with 5 times with different random seeds
+            subfolder = "augmented" if not isinstance(aug_params['aug_method'], list) else "augmented_merged"
+            X_aug, Y_aug = read_csv_file(file_name + '.csv', subfolder=subfolder)
+            X_train += X_aug
+            Y_train += Y_aug
+
+        print("Augmented data len:", len(X_train))
+        params.aug_params = build_params_list(aug_params_list)
+        params.run_tag = f"{int(precentage)}_{aug_combination}_{aug_run_tag}"
+
+    #Run the model 5 or less times with different random seeds
     for i in range(runs):
         params.random_seed = i
         params.run_name = params.run_tag + "_" + str(i)
@@ -85,7 +116,7 @@ def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local
     #Create a file name based on the script name and the precentage of the data used for training
     #Save the results to file
     try:
-        filename = model_name + "_" + str(int(precentage)) + ".csv"
+        filename = model_name + "_" + str(int(precentage)) + "_" + aug_params['aug_method'] + "_n" + str(aug_params['num_new_docs']) + ".csv"
         save_result_file(model_name,filename, best_results)
     except:
         print("Error occured while saving the results. Please check the sys args.")
