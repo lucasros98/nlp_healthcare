@@ -51,6 +51,8 @@ def augment_data(args):
             elif aug_method == "label_wise_token_replacement":
                 label_dict = data_aug.create_label_dict(X_train, Y_train)
                 X_tmp, Y_tmp = data_aug.label_wise_token_replacement(tokens, labels, p, label_dict)  
+            elif aug_method == "bert_masking":
+                X_tmp, Y_tmp = data_aug.bert_masking(tokens, labels, p)
             X_new.append(X_tmp)
             Y_new.append(Y_tmp)
     #Write the new data to a csv file

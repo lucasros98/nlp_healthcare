@@ -1,6 +1,7 @@
 # Functions for data augmentation
 import numpy as np
 from numpy import random
+from transformers import pipeline
 from translation import translate_text_to_eng_batch, translate_text_to_swe_batch
 from generation import LabelGenerator
 import copy
@@ -25,6 +26,7 @@ class TranslationParameters():
 class DataAugmentation():
     def __init__(self):
         self.generator = LabelGenerator()
+        self.bert_mask = pipeline('fill-mask', model='KB/bert-base-swedish-cased')
 
     # Translate the whole dataset to english and back to swedish
     def back_translation(self, X, Y, num_sentences=1):
@@ -222,3 +224,65 @@ class DataAugmentation():
                 X_new.append(token)
                 Y_new.append(label)
         return X_new, Y_new 
+
+
+    def bert_masking(self, X, Y, p):
+
+        X_new = []
+        Y_new = []
+
+        dist = random.binomial(n=1, p=p, size=len(X))
+
+        for token, label, prob in zip(X, Y, dist):
+            if prob == 1 and label == 'O':
+                X_new.append('[MASK]')
+                Y_new.append(label)
+            else:
+                X_new.append(token)
+                Y_new.append(label)
+        
+        #check if x contains [MASK]
+        if '[MASK]' not in X_new:
+            return X_new, Y_new
+             
+        else:
+            text = ' '.join(X_new)
+
+            predictions = self.bert_mask(text)
+
+            for item in predictions:
+                if isinstance(item, dict):  # If item is a dictionary
+                    word = process_prediction(item)
+                    if word is not None:
+                        text = text.replace('[MASK]', word, 1)
+                        break
+                elif isinstance(item, list):  # If item is a list
+                    chosen = False
+                    for prediction in item:
+                        word = process_prediction(prediction)
+
+                        if word is not None and word not in ["-", "",":",",","."]:
+                            chosen = True
+                            text = text.replace('[MASK]', word, 1)
+                            break
+
+                    if not chosen:
+                        #Choose first prediction
+                        word = process_prediction(item[0])
+                        text = text.replace('[MASK]', word, 1)
+                            
+        
+            X_new = text.split(" ")
+            
+        return X_new, Y_new
+
+#Helper function for BERT masking
+def process_prediction(prediction):
+    try:
+        token_str = prediction["token_str"]
+        if token_str is not None:
+            word = prediction["token_str"]
+            return word
+    except KeyError as e:
+        print(f"KeyError occurred: {e}")
+    return None
