@@ -346,7 +346,7 @@ class SequenceLabeler:
 
         # Initialize the logger.
         if params.logging:
-            self.logger = Logger(project=params.model_name, config=vars(params),name=params.run_name)
+            self.logger = Logger(project="augmented_" + params.model_name, config=vars(params),name=params.run_name)
         else:
             self.logger = None
     # Preprocess the data, build vocabularies and data loaders.
