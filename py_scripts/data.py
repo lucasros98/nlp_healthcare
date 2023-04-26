@@ -90,6 +90,20 @@ def get_unique_test(lang='sv'):
     X_test,Y_test = read_csv_file(name_test,subfolder="test")
     return X_test,Y_test
 
+def build_file_name(aug_method, num_new_docs, data_size, p=None, bt_type=None):
+    file_name = ''
+    # if its a single aug_method, return the file_name string
+    if not isinstance(aug_method, list):
+        file_name = f"{aug_method}_s{num_new_docs}{'_p' + str(p) if p else ''}_d{int(data_size)}{'_' + bt_type if bt_type else ''}"
+    
+    # if the aug_methods have been merged
+    else:
+        for i, method in enumerate(aug_method):
+            if i > 0:
+                file_name += '_'
+            file_name += f"{method}_s{num_new_docs[i]}{'_p' + str(p[i]) if p else ''}_d{int(data_size)}{'_' + bt_type[i] if bt_type else ''}"
+
+    return file_name
 
 def get_augmented_data(params=None):
     """Get the augmented data.
@@ -103,13 +117,14 @@ def get_augmented_data(params=None):
     aug_method = params['aug_method']
     num_new_docs = params['num_new_docs']
     data_size = params['data_size']
-    p = params['p']
+    p = params.get('p', None)
+    bt_type = params.get('bt_type', None)
 
-    file_name = f"{aug_method}_s{num_new_docs}{'_p' + str(p) if p is not None else ''}_d{int(data_size)}.csv"
+    file_name = f"{aug_method}_s{num_new_docs}{'_p' + str(p) if p else ''}_d{int(data_size)}{'_' + bt_type if bt_type else ''}.csv"
 
     X, Y = read_csv_file(file_name, subfolder="augmented")
-
-    print("Data length with " + aug_method + ": " + str(len(X)))
+    print("Data length with " + str(aug_method) + ": " + str(len(X)))
+    
     return X,Y
 
 def append_augmented_data(X, Y, params):
@@ -127,9 +142,11 @@ def append_augmented_data(X, Y, params):
     aug_method = params['aug_method']
     num_new_docs = params['num_new_docs']
     data_size = params['data_size']
-    p = params['p']
+    p = params.get('p', None)
+    bt_type = params.get('bt_type', None)
 
-    file_name = aug_method + "_s" + str(num_new_docs) + "_p" + str(p) + "_d" + str(int(data_size)) + ".csv"
+
+    file_name = f"{aug_method}_s{num_new_docs}{'_p' + str(p) if p else ''}_d{int(data_size)}{'_' + bt_type if bt_type else ''}.csv"
 
     X_aug, Y_aug = read_csv_file(file_name, subfolder="augmented")
     if X_aug == None:
@@ -449,9 +466,9 @@ def decode_abbrevs(X,Y):
         curr_x, curr_y = [],[]
 
         for j in range(len(X[i])):
-            if(X[i][j] in dict):
+            if(X[i][j].lower() in dict):
                 #Get the abbreviation
-                abrev = dict[X[i][j]]
+                abrev = dict[X[i][j].lower()]
 
                 #Tokenize the abbreviation
                 abrev = abrev.split(" ")
