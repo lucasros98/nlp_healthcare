@@ -34,6 +34,27 @@ class LabelGenerator:
             if name in self.first_names_women:
                 self.first_names_neutral.append(name)
 
+    def get_label(self,token):
+        if token in self.last_names:
+            return 'B-Last_Name'
+        elif token in self.first_names_men:
+            return 'B-First_Name'
+        elif token in self.first_names_women:
+            return 'B-First_Name'
+        elif token in self.first_names_neutral:
+            return 'B-First_Name'
+        elif token in self.healthcare_units:
+            return 'B-Health_Care_Unit'
+        elif token in self.swedish_cities:
+            return 'B-Location'
+        elif token in self.districts_gbg:
+            return 'B-Location'
+        elif token in self.countries:
+            return 'B-Location'
+        elif token in self.addresses:
+            return 'B-Location'
+        return None
+
     def get_gender_of_first_name(self, first_name):
         if first_name in self.first_names_neutral:
             return None

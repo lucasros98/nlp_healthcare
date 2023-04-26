@@ -314,7 +314,12 @@ class DataAugmentation():
                         if not chosen:
                             word = process_prediction(item[0])
                             X_new[i] = word
-
+                
+                # Update the label in Y_new if the token is present in any of the dictionaries or lists
+                new_label = self.generator.get_label(X_new[i])
+                if new_label is not None:
+                    Y_new[i] = new_label
+                
                 # Check if the predicted word starts with '##'
                 if X_new[i].startswith('##') and i > 0:
                     X_new[i] = X_new[i].replace('##', '')
