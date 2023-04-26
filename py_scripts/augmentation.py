@@ -7,6 +7,8 @@ import copy
 import os
 import sys
 from dotenv import load_dotenv,find_dotenv
+from data import get_all_entities
+from file_handler import read_csv_file
 
 sys.path.append(os.path.dirname(find_dotenv()))
 load_dotenv(find_dotenv())
@@ -14,33 +16,42 @@ load_dotenv(find_dotenv())
 #Get the path for the data
 PATH = os.getenv('DATA_PATH')
 
-
-class TranslationParameters():
+#Parameters for translation models
+class TranslationParametersENG():
     num_beams=4
     early_stopping=True
     max_length=512
     use_decoded=True
-    num_sentences=1
+    type='s4s'
+
+#Parameters for translation models
+class TranslationParametersSWE():
+    num_beams=4
+    early_stopping=True
+    max_length=512
+    use_decoded=True
 
 class DataAugmentation():
     def __init__(self):
         self.generator = LabelGenerator()
 
     # Translate the whole dataset to english and back to swedish
-    def back_translation(self, X, Y, num_sentences=1):
+    def back_translation(self, X, Y, num_sentences=1, bt_type='s4s'):
         # Parameters for translation models
-        params = TranslationParameters()
+        params_eng = TranslationParametersENG()
+        params_swe = TranslationParametersSWE()
 
         _X = copy.deepcopy(X)
         _Y = copy.deepcopy(Y)
 
         # Translate to english
-        params.num_sentences = 1
-        X_new, Y_new = translate_text_to_eng_batch(_X, _Y, params=params)
+        params_eng.num_sentences = 1
+        X_new, Y_new = translate_text_to_eng_batch(_X, _Y, params=params_eng)
 
         # Translate back to swedish
-        params.num_sentences = num_sentences # number of sentences to generate for each sentence
-        X_new, Y_new = translate_text_to_swe_batch(X_new,Y_new,params=params)
+        params_swe.num_sentences = num_sentences # number of sentences to generate for each sentence
+        params_swe.type = bt_type # 's4s' or 'w4w'
+        X_new, Y_new = translate_text_to_swe_batch(X_new,Y_new,params=params_swe)
         return X_new, Y_new
 
 
@@ -56,6 +67,16 @@ class DataAugmentation():
 
     # Replace entities not labeled as 'O' (mentions) with new generated entities
     def mention_replacement(self, X, Y, p):
+        # Get the unique test data
+        X_unique, Y_unique = read_csv_file('test_sv_unique.csv', subfolder="test")
+        #Create blacklist for entities from unique test data
+        black_list = get_all_entities(X_unique, Y_unique)
+        #Remove the common entities present in the blacklist (so that we don't generate them)
+        for key in black_list:
+            black_list[key] = list(set(black_list[key]))
+            self.generator.remove_common_entities(black_list[key],key)
+    
+
         merged_tokens = []
         merged_labels = []
         # merge mentions that are split into multiple tokens (e.g. "B-First_Name, I-First_Name" -> "B-First_Name")
@@ -74,7 +95,6 @@ class DataAugmentation():
         mentions = list(filter(lambda x: x != 'O', merged_labels)) # get all labels that are not 'O'
         dist = random.binomial(n=1, p=p, size=len(mentions)) # distribution of mentions to replace
         mention_index = 0
-        mentions_replaced = 0
 
         for i, (token, label) in enumerate(zip(merged_tokens, merged_labels)):
             gender = None
@@ -92,10 +112,14 @@ class DataAugmentation():
                         else:
                             Y_new.append(label)
                     mention_index += 1
-                    mentions_replaced += 1
                 else:
-                    X_new.append(token)
-                    Y_new.append(label)
+                    token_len = len(token.split()) # get number of subtokens in mention
+                    for j in range(token_len):
+                        X_new.append(token.split()[j])
+                        if j > 0:
+                            Y_new.append('I-' + label[2:])
+                        else:
+                            Y_new.append(label)
             else:
                 X_new.append(token)
                 Y_new.append(label)
@@ -206,7 +230,7 @@ class DataAugmentation():
         return label_dict
 
 
-    # Replace tokens with random tokens of the same label
+    # Replace tokens with random tokens of the label 'O'
     def label_wise_token_replacement(self, X, Y, p, label_dict):
         X_new = []
         Y_new = []
@@ -222,3 +246,51 @@ class DataAugmentation():
                 X_new.append(token)
                 Y_new.append(label)
         return X_new, Y_new 
+
+    
+    # Replace mentions with random mentions of the same label
+    def local_mention_replacement(self, X, Y, p, label_dict):
+        merged_tokens = []
+        merged_labels = []
+        # merge mentions that are split into multiple tokens (e.g. "B-First_Name, I-First_Name" -> "B-First_Name")
+        for i, (token, label) in enumerate(zip(X, Y)):
+            if label != 'O':
+                if i > 0 and Y[i-1][2:] == label[2:]:
+                    merged_tokens[-1] = merged_tokens[-1] + ' ' + token
+                else:
+                    merged_tokens.append(token)
+                    merged_labels.append(label)
+            else:
+                merged_tokens.append(token)
+                merged_labels.append(label)
+        X_new = []
+        Y_new = []
+        mentions = list(filter(lambda x: x != 'O', merged_labels)) # get all labels that are not 'O'
+        dist = random.binomial(n=1, p=p, size=len(mentions)) # distribution of mentions to replace
+        mention_index = 0
+
+        for i, (token, label) in enumerate(zip(merged_tokens, merged_labels)):
+            _label = label if label == 'O' else label[2:]
+            if _label != 'O':
+                if dist[mention_index] == 1: 
+                    new_mention = random.choice(label_dict[_label])
+                    new_mention_len = len(new_mention.split()) # get number of tokens in generated mention
+                    for j in range(new_mention_len):
+                        X_new.append(new_mention.split()[j])
+                        if j > 0:
+                            Y_new.append('I-' + label[2:])
+                        else:
+                            Y_new.append(label)
+                    mention_index += 1
+                else:
+                    token_len = len(token.split()) # get number of subtokens in mention
+                    for j in range(token_len):
+                        X_new.append(token.split()[j])
+                        if j > 0:
+                            Y_new.append('I-' + label[2:])
+                        else:
+                            Y_new.append(label)
+            else:
+                X_new.append(token)
+                Y_new.append(label)
+        return X_new, Y_new
