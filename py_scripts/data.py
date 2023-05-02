@@ -479,9 +479,11 @@ def split_randomly_subsets(X_data,Y_data,data_sizes=[0.1,0.25,0.5,0.75],random_s
     #Get the number of sentences to use
     num_sentences_to_use = [int(x * num_sentences) for x in data_sizes]
 
-    #Shuffle the data
+    #Shuffle the data (but make sure that the same seed is used for both X and Y)
+    random.seed(random_seed)
     random.shuffle(X)
     random.seed(random_seed)
+    random.shuffle(Y)
 
     #Split the data
     X_new, Y_new = {},{}
