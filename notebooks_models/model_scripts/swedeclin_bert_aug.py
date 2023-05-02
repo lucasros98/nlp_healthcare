@@ -23,7 +23,7 @@ bt_type = None
 for aug_method in aug_methods:
     for p in p_range:
         for num_new_docs in num_new_docs_range:
-            aug_params_list: [
+            aug_params_list = [
                 {
                     'aug_method': aug_method,
                     'p': p,

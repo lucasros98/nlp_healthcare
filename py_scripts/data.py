@@ -456,6 +456,48 @@ def split_randomly(X_data,Y_data,data_size=1.0,random_seed=27):
     return X_new, Y_new
 
 
+def split_randomly_subsets(X_data,Y_data,data_sizes=[0.1,0.25,0.5,0.75],random_seed=27):
+    """
+    Split the data randomly into different sizes.
+    The function makes sure that all smaller data sets are subsets of the larger ones.
+    Returns a dictionary with the data sets, and their size as keys.
+    """
+    #Create a copy of the data (deep copy)
+    X = copy.deepcopy(X_data)
+    Y = copy.deepcopy(Y_data)
+
+    #check if all data sizes are between 0 and 1
+    if not all(0 <= x <= 1 for x in data_sizes):
+        raise ValueError("Data size must be between 0 and 1")
+    
+    #Order the data sizes in descending order
+    data_sizes.sort(reverse=True)
+
+    #Get the number of sentences
+    num_sentences = len(X)
+
+    #Get the number of sentences to use
+    num_sentences_to_use = [int(x * num_sentences) for x in data_sizes]
+
+    #Shuffle the data (but make sure that the same seed is used for both X and Y)
+    random.seed(random_seed)
+    random.shuffle(X)
+    random.seed(random_seed)
+    random.shuffle(Y)
+
+    #Split the data
+    X_new, Y_new = {},{}
+    for i in range(len(num_sentences_to_use)):
+        #Get the sentences to use
+        X_new[data_sizes[i]] = X[:num_sentences_to_use[i]]
+        Y_new[data_sizes[i]] = Y[:num_sentences_to_use[i]]
+
+        #Remove the sentences that are used
+        X = X[:num_sentences_to_use[i]]
+        Y = Y[:num_sentences_to_use[i]]
+
+    return X_new, Y_new
+
 #Replace the abbreviations in the data with the corresponding tokens
 def decode_abbrevs(X,Y):
     dict = read_public_csv("abbreviations.csv")

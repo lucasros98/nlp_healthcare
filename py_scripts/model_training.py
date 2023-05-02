@@ -64,8 +64,8 @@ def run_model(model_name="kb_bert",bert_model="KB/bert-base-swedish-cased",local
     params.data_size = precentage
     params.run_tag = str(int(precentage)) + "_normal" 
 
-    aug_run_tag = ""
     if aug_params_list is not None:
+        aug_run_tag = ""
         for aug_params in aug_params_list:
             file_name = build_file_name(**aug_params)
             aug_run_tag += file_name + "_"
