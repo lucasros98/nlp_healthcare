@@ -18,9 +18,9 @@ from data import create_data_dirs, split_data, split_randomly, generate_unique_t
 from translation import translate_text_to_eng_batch
 
 #String of punctuation to remove
-#punctuation = string.punctuation.replace('-','')
-#punctuation = punctuation.replace('>','')
-punctuation = "#$%&'/@[\]^_\"`{|}~" #NEW
+punctuation = string.punctuation.replace('-','')
+punctuation = punctuation.replace('>','')
+#punctuation = ".#$%&'/@[\]^_\"`{|}~"
 
 X, Y = preprocessing(IOB=True,punctuation=punctuation,cased=True)
 
