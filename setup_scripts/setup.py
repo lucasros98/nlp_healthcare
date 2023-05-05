@@ -1,21 +1,23 @@
+#Script for creating all the training, validation and test data.
 import os
 import sys
 import string
 from dotenv import load_dotenv,find_dotenv
 
+sys.path.append(os.path.dirname(find_dotenv()))
 load_dotenv(find_dotenv())
 
 #Get the path for the data
 PATH = os.getenv('DATA_PATH')
 
-from file_handler import write_csv_file
-from preprocessing import preprocessing
+from py_scripts.file_handler import write_csv_file
+from py_scripts.preprocessing import preprocessing
 
 #Write to train, test and validation data folder
-from data import create_data_dirs, split_data, split_randomly, generate_unique_test_data
+from py_scripts.data import create_data_dirs, split_data, split_randomly, generate_unique_test_data
 
 #For translation 
-from translation import translate_text_to_eng_batch
+from py_scripts.translation import translate_text_to_eng_batch
 
 #String of punctuation to remove
 punctuation = string.punctuation.replace('-','')

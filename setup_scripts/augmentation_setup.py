@@ -1,3 +1,4 @@
+#Used for creating augmented data
 import os
 import sys
 import string
@@ -5,18 +6,15 @@ from dotenv import load_dotenv,find_dotenv
 from transformers import pipeline
 from multiprocessing import Pool
 from tqdm import tqdm
-from data import get_all_entities
 
+sys.path.append(os.path.dirname(find_dotenv()))
 load_dotenv(find_dotenv())
 
-#Get the path for the data
-PATH = os.getenv('DATA_PATH')
+from py_scripts.file_handler import write_csv_file
 
-from file_handler import write_csv_file
+from py_scripts.data import get_all_entities,get_training_data, get_augmented_data, build_file_name
 
-from data import get_training_data, get_augmented_data, build_file_name
-
-from augmentation import DataAugmentation
+from py_scripts.augmentation import DataAugmentation
 
 #Parameters for data augmentation
 class AugmentationParameters():
