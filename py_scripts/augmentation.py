@@ -1,6 +1,7 @@
 # Functions for data augmentation
 import numpy as np
 from numpy import random
+import string
 from translation import translate_text_to_eng_batch, translate_text_to_swe_batch
 from generation import LabelGenerator
 import copy
@@ -399,7 +400,60 @@ class DataAugmentation():
                     Y_new.pop(i)
                 
                 # Remove empty string tokens from X_new and the corresponding labels from Y_new
-                if X_new[i] in ["''", '""', "\""]:
+                elif X_new[i] in ["''", '""', "\""]:
+                    X_new.pop(i)
+                    Y_new.pop(i)
+        return X_new, Y_new
+
+    #mask one single word at a time if it chosen to be masked
+    def bert_masking_single_v2(self, X, Y, p, bert_mask):
+        X_new = copy.deepcopy(X)
+        Y_new = copy.deepcopy(Y)
+
+        dist = random.binomial(n=1, p=p, size=len(X))
+
+        for i in reversed(range(len(X))):
+            token, label, prob = X[i], Y[i], dist[i]
+            if prob == 1 and label == 'O':
+                X_masked = copy.deepcopy(X)
+                X_masked[i] = '[MASK]'
+                text = ' '.join(X_masked)
+
+                predictions = bert_mask(text)
+
+                for item in predictions:
+                    if isinstance(item, dict):
+                        word = process_prediction(item)
+                        if word is not None:
+                            X_new[i] = word
+                            break
+                    elif isinstance(item, list):
+                        chosen = False
+                        for prediction in item:
+                            word = process_prediction(prediction)
+
+                            if word is not None and word not in ["-", "", ":", ",", "."]:
+                                chosen = True
+                                X_new[i] = word
+                                break
+
+                        if not chosen:
+                            word = process_prediction(item[0])
+                            X_new[i] = word
+                
+                # Update the label in Y_new if the token is present in any of the dictionaries or lists
+                new_label = self.generator.get_label(X_new[i])
+                if new_label is not None:
+                    Y_new[i] = new_label
+                
+                # Check if the predicted word starts with '##'
+                if X_new[i].startswith('##') and i > 0:
+                    X_new[i] = X_new[i].replace('##', '')
+                    X_new[i - 1] = X_new[i - 1] + X_new[i]
+                    X_new.pop(i)
+                    Y_new.pop(i)
+                # Remove empty tokens that are not a word
+                elif len(X_new[i].strip(string.punctuation)) == 0:
                     X_new.pop(i)
                     Y_new.pop(i)
         return X_new, Y_new

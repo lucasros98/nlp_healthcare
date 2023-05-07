@@ -30,7 +30,7 @@ def clean_label_string(token,label_lower):
 import string
 import re
 
-def preprocessing(IOB=True,punctuation=string.punctuation,no_duplicates=True,cased=True,skip_first_word=True):
+def preprocessing(IOB=True,punctuation=string.punctuation,no_duplicates=True,cased=True,skip_first_word=True,):
     #Load file and get lines
     with open(PATH) as f:
         documents = f.read().splitlines() 
@@ -65,13 +65,17 @@ def preprocessing(IOB=True,punctuation=string.punctuation,no_duplicates=True,cas
         
         doc = doc.replace("->"," ->")
 
-        #Add space after dot and comma when followed by a letter
+        # OLD:
         doc = re.sub(r'(?<=[.,:])(?=[a-zA-Z])', r' ', doc)
- 
+
+        #Add space before and after dot and comma when arounded by letters
+        #doc = re.sub(r'(?<=[.])(?=[a-zA-Z])', ' 'r' ', doc)
+        #doc = re.sub(r'(?<=[a-zA-Z])(?=[,])', ' 'r' ', doc)
+        #doc = re.sub(r'(?<=[a-zA-Z])(?=[.])', ' 'r' ', doc)
+
         #split string
         words = doc.split()
         
-
         if skip_first_word:
             #First handle the special cases
             if len(words) > 3 and words[0].lower() == 'rapport':
@@ -82,7 +86,8 @@ def preprocessing(IOB=True,punctuation=string.punctuation,no_duplicates=True,cas
                 words = words[1:]
 
         #Find the last terminal punctuation mark
-        terminal_punctuation = ['.','!','?',')','"']
+        #Old
+        terminal_punctuation = ['.','!','?',')','"'] #['.','!','?',]
         last_punctuation = 0
         for i,word in enumerate(words):
             if word in terminal_punctuation or word[-1] in terminal_punctuation:

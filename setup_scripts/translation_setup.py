@@ -3,18 +3,16 @@ import sys
 import string
 from dotenv import load_dotenv,find_dotenv
 
+sys.path.append(os.path.dirname(find_dotenv()))
 load_dotenv(find_dotenv())
 
-#Get the path for the data
-PATH = os.getenv('DATA_PATH')
-
-from file_handler import write_csv_file
+from py_scripts.file_handler import write_csv_file
 
 #Write to train, test and validation data folder
-from data import get_training_data
+from py_scripts.data import get_training_data
 
 #For translation 
-from translation import translate_text_to_eng_batch
+from py_scripts.translation import translate_text_to_eng_batch
 
 #Parameters for translation models
 class TranslationParameters():
