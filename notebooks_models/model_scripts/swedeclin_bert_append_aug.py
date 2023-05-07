@@ -18,34 +18,16 @@ except:
 combinations = [
     [
         {
-            'aug_method': 'unique_mention_replacement',
-            'p': 0.5,
-            'num_new_docs': 3,
-            'data_size': precentage,
-            'bt_type': None
-        },
-        {
-            'aug_method': 'local_mention_replacement',
-            'p': 0.3,
+            'aug_method': 'back_translation_s4s',
+            'p': None,
             'num_new_docs': 1,
-            'data_size': precentage,
-            'bt_type': None
-        }
-    ],
-    [
-        {
-            'aug_method': 'unique_mention_replacement',
-            'p': 0.5,
-            'num_new_docs': 2,
-            'data_size': precentage,
-            'bt_type': None
+            'data_size': precentage
         },
         {
-            'aug_method': 'synonym_replacement',
+            'aug_method': 'bert_masking',
             'p': 0.1,
-            'num_new_docs': 1,
-            'data_size': precentage,
-            'bt_type': None
+            'num_new_docs': 2,
+            'data_size': precentage
         }
     ]
 ]

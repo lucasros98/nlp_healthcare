@@ -21,18 +21,16 @@ from augmentation import DataAugmentation
 #Parameters for data augmentation
 class AugmentationParameters():
     data_size_range = [10]
-    p_range = [None]
+    p_range = [0.3]
     num_new_docs_range = [1]
-    methods = ['back_translation'] # ['random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement', 'mention_replacement'] # ['back_translation']
-    bt_type = 's4s'
-    merge_methods = False
+    methods = ['unique_mention_replacement'] # ['random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement', 'unique_mention_replacement'] # ['back_translation']
+    merge_methods = True
 
 class AugmentationParametersMergeBase():
     data_size = 10
-    p = 0.1
-    num_new_docs = 1
-    aug_method = 'random_deletion' # ['random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement', 'mention_replacement'] # ['back_translation']
-    bt_type = None
+    p = None
+    num_new_docs = 2
+    aug_method = 'back_translation_s4s' # ['random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement', 'unique_mention_replacement'] # ['back_translation']
 
 aug_params = AugmentationParameters()
 params_merge_base = AugmentationParametersMergeBase()
@@ -48,7 +46,7 @@ def print_augmentation_results(args):
 
 def get_data(data_size):
     if aug_params.merge_methods: 
-        X_train, Y_train = get_augmented_data({'data_size': data_size, 'p': params_merge_base.p, 'num_new_docs': params_merge_base.num_new_docs, 'aug_method': params_merge_base.aug_method, 'bt_type': params_merge_base.bt_type})
+        X_train, Y_train = get_augmented_data({'data_size': data_size, 'p': params_merge_base.p, 'num_new_docs': params_merge_base.num_new_docs, 'aug_method': params_merge_base.aug_method})
     else:
         X_train,Y_train,_,_,_,_ = get_training_data(precentage=data_size)
       
@@ -61,7 +59,7 @@ def write_data(args, X_new, Y_new):
         file_name = build_file_name(**args)
         subfolder = "augmented"
     else:
-        file_name = build_file_name(**{'aug_method': [params_merge_base.aug_method, args['aug_method']], 'num_new_docs': [params_merge_base.num_new_docs, args['num_new_docs']], 'data_size': args['data_size'], 'p': [params_merge_base.p, args['p']], 'bt_type': None})
+        file_name = build_file_name(**{'aug_method': [params_merge_base.aug_method, args['aug_method']], 'num_new_docs': [params_merge_base.num_new_docs, args['num_new_docs']], 'data_size': args['data_size'], 'p': [params_merge_base.p, args['p']]})
         subfolder = "augmented_merged"
 
     write_csv_file(file_name, X_new, Y_new, subfolder)
@@ -103,17 +101,16 @@ def augment_data(args):
 for data_size in aug_params.data_size_range:
     for aug_method in aug_params.methods:
         # Run back-translation for each data size and number of new documents   
-        if(aug_method == "back_translation"):
+        if(aug_method[:-4] == "back_translation"):
             X_train, Y_train = get_data(data_size)
 
             for num_new_docs in aug_params.num_new_docs_range:
-                X_new, Y_new = data_aug.back_translation(X_train, Y_train, num_sentences=num_new_docs, bt_type=aug_params.bt_type)
+                X_new, Y_new = data_aug.back_translation(X_train, Y_train, num_sentences=num_new_docs, bt_type=aug_method[-3:])
 
                 params_dict = {
                     'aug_method': aug_method,
                     'num_new_docs': num_new_docs,
-                    'data_size': data_size,
-                    'bt_type': aug_params.bt_type
+                    'data_size': data_size
                 }
 
                 write_data(params_dict, X_new, Y_new)
@@ -144,7 +141,7 @@ for data_size in aug_params.data_size_range:
             # Run each specified aug method (exepct back_translation) for each data size, p and number of new documents
             # Use a Pool to parallelize the outermost loop
             with Pool() as pool:
-                pool.map(augment_data, [{'data_size': data_size, 'p': p, 'num_new_docs': num_new_docs, 'aug_method': aug_method, 'bt_type': None} for p in aug_params.p_range for num_new_docs in aug_params.num_new_docs_range])
+                pool.map(augment_data, [{'data_size': data_size, 'p': p, 'num_new_docs': num_new_docs, 'aug_method': aug_method} for p in aug_params.p_range for num_new_docs in aug_params.num_new_docs_range])
 
 
 print("Data augmentation done jihooo!")

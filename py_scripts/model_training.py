@@ -8,7 +8,7 @@ load_dotenv(find_dotenv())
 
 from transformers import AutoTokenizer, AutoModel
 from py_scripts.file_handler import save_result_file, read_csv_file
-from py_scripts.data import get_training_data, get_unique_test, build_file_name, get_augmented_data
+from py_scripts.data import get_training_data, get_unique_test, build_file_name
 import py_scripts.ner_util.ner_system as ner_util
 import py_scripts.ner_util.evaluation as evaluation
 from parameters import NERParameters
@@ -29,8 +29,6 @@ def build_params_list(combinations):
     aug_params['p'] = list(set(results['p'])) if len(set(results['p'])) > 1 else results['p'][0]
     aug_params['num_new_docs'] = list(set(results['num_new_docs'])) if len(set(results['num_new_docs'])) > 1 else results['num_new_docs'][0]
     aug_params['data_size'] = list(set(results['data_size'])) if len(set(results['data_size'])) > 1 else results['data_size'][0]
-    aug_params['bt_type'] = list(set(results['bt_type'])) if len(set(results['bt_type'])) > 1 else results['bt_type'][0]
-    
     return aug_params
 
 

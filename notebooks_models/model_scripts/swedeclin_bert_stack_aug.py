@@ -18,11 +18,50 @@ except:
 combinations = [
     [
         {
-            'aug_method': ['synonym_replacement', 'unique_mention_replacement'],
+            'aug_method': ['back_translation_s4s', 'bert_masking'],
+            'num_new_docs': [2, 1],
+            'p': [None, 0.1],
+            'data_size': precentage
+        }
+    ],
+    [
+        {
+            'aug_method': ['back_translation_s4s', 'random_deletion'],
+            'num_new_docs': [1, 3],
+            'p': [None, 0.3],
+            'data_size': precentage
+        }
+    ],
+    [
+        {
+            'aug_method': ['back_translation_s4s', 'random_deletion'],
+            'num_new_docs': [2, 1],
+            'p': [None, 0.3],
+            'data_size': precentage
+        }
+    ],
+    [
+        {
+            'aug_method': ['back_translation_s4s', 'unique_mention_replacement'],
+            'num_new_docs': [2, 1],
+            'p': [None, 0.3],
+            'data_size': precentage
+        }
+    ],
+    [
+        {
+            'aug_method': ['back_translation_s4s', 'random_deletion'],
             'num_new_docs': [3, 1],
-            'p': [0.1, 0.5],
-            'data_size': precentage,
-            'bt_type': [None, None]
+            'p': [None, 0.1],
+            'data_size': precentage
+        }
+    ],
+    [
+        {
+            'aug_method': ['back_translation_s4s', 'unique_mention_replacement'],
+            'num_new_docs': [3, 1],
+            'p': [None, 0.3],
+            'data_size': precentage
         }
     ]
 ]

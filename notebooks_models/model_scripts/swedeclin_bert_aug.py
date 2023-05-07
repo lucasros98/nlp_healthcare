@@ -15,10 +15,9 @@ except:
     precentage = 100
     print("Error occured while parsing the precentage from the sys args. Please check the sys args. Using {}% of the data.".format(precentage))
 
-p_range = [0.1, 0.3, 0.5] # Use [None] for back_translation
-num_new_docs_range = [1, 2, 3]
-aug_methods =  ['unique_mention_replacement'] #['random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement'] # ['back_translation']
-bt_type = None
+p_range = [0.1, 0.3] # Use [None] for back_translation
+num_new_docs_range = [1, 3]
+aug_methods =  ['random_deletion', 'shuffle_within_segments'] #['random_deletion', 'synonym_replacement', 'shuffle_within_segments', 'label_wise_token_replacement'] # ['back_translation']
 
 for aug_method in aug_methods:
     for p in p_range:
@@ -28,8 +27,7 @@ for aug_method in aug_methods:
                     'aug_method': aug_method,
                     'p': p,
                     'num_new_docs': num_new_docs,
-                    'data_size': precentage,
-                    'bt_type': bt_type
+                    'data_size': precentage
                 }
             ]
             #Run the model
