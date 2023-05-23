@@ -108,7 +108,8 @@ for data_size in aug_params.data_size_range:
                 params_dict = {
                     'aug_method': aug_method,
                     'num_new_docs': num_new_docs,
-                    'data_size': data_size
+                    'data_size': data_size,
+                    'p': None
                 }
 
                 write_data(params_dict, X_new, Y_new)
