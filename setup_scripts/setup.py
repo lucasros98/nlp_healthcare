@@ -65,6 +65,8 @@ class TranslationParameters():
     early_stopping=True
     max_length=512
     use_decoded=True
+    num_sentences=1 #Used for data augmentation
+    type = 's4s'
 
 translations_params = TranslationParameters()
 
