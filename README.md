@@ -1,5 +1,7 @@
 # Master Thesis - Enhancing Named Entity Recognition Performance using Data Augmentation
 
+**The paper can be found here**: https://gupea.ub.gu.se/handle/2077/78677
+
 This repository contains the code for our master thesis that explored how data augmentation could be used to improve the performance of NER models for Swedish clinical text. The dataset used for this project is the Stockholm EPR PHI Pseudo Corpus.
 
 In this study we explored and compared the performance of five different models: **KB-BERT, M-BERT, SweDeClin-BERT, Bio-BERT and Clinical BERT**. We also explored nine different data augmentation techniques on the best-performing model, SweDeClin-BERT.
